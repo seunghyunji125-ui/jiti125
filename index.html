@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="ko">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>로블록스 약수 풍선 서바이벌</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      font-family: "Noto Sans KR", sans-serif;
+      color: #fff;
+      background-color: #0b101d;
+      overflow-x: hidden;
+      user-select: none;
+    }
+
+    .roblox-font { font-family: 'Fredoka', sans-serif; }
+
+    /* 은은하게 지나가는 수학 기호 배경 패턴 */
+    .math-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+      opacity: 0.15;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="220" height="220" viewBox="0 0 220 220"><text x="25" y="45" fill="%2300E5FF" font-size="28" font-family="sans-serif">∑</text><text x="130" y="55" fill="%23FFD600" font-size="24" font-family="sans-serif">√x</text><text x="75" y="120" fill="%23FF4081" font-size="30" font-family="sans-serif">π</text><text x="165" y="140" fill="%2300E676" font-size="26" font-family="sans-serif">∫</text><text x="35" y="185" fill="%23FF9100" font-size="24" font-family="sans-serif">÷</text><text x="120" y="195" fill="%23E040FB" font-size="28" font-family="sans-serif">∞</text><text x="175" y="45" fill="%2300E5FF" font-size="22" font-family="sans-serif">×</text><text x="85" y="45" fill="%23FF3D00" font-size="22" font-family="sans-serif">≠</text></svg>');
+      background-size: 220px 220px;
+      animation: bgScroll 35s linear infinite;
+    }
+
+    @keyframes bgScroll {
+      from { background-position: 0 0; }
+      to { background-position: 220px 220px; }
+    }
+
+    /* 로블록스 스타일 입체 버튼 */
+    .roblox-btn {
+      background: #00A2FF;
+      border: none;
+      border-bottom: 5px solid #0066B3;
+      border-radius: 12px;
+      color: #fff;
+      font-weight: 900;
+      transition: all 0.1s ease;
+      text-shadow: 0 2px 0 rgba(0,0,0,0.3);
+    }
+    .roblox-btn:hover {
+      background: #1AB0FF;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,162,255,0.4);
+    }
+    .roblox-btn:active {
+      transform: translateY(3px);
+      border-bottom-width: 2px;
+      box-shadow: none;
+    }
+
+    /* 게임 스테이지 */
+    .game-stage {
+      position: relative;
+      width: 100%;
+      height: 60vh;
+      min-height: 450px;
+      overflow: hidden;
+      border: 4px solid #1e293b;
+      border-radius: 20px;
+      background: linear-gradient(180deg, #1e3c72 0%, #2a5298 60%, #11998e 100%);
+      box-shadow: 0 12px 24px rgba(0,0,0,0.5);
+      cursor: crosshair;
+    }
+
+    /* 로블록스 풍선 디자인 */
+    .balloon {
+      position: absolute;
+      width: 90px;
+      height: 100px;
+      border: 3px solid rgba(0, 0, 0, 0.4);
+      border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+      color: #fff !important;
+      font-size: 2rem;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: translate(-50%, -50%);
+      transition: filter .12s, transform .12s;
+      box-shadow: inset -10px -10px 0 rgba(0,0,0,0.25), 0 8px 15px rgba(0,0,0,0.3);
+      animation: balloonBob 2s ease-in-out infinite alternate;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .balloon::after {
+      content: "";
+      position: absolute;
+      width: 2px;
+      height: 45px;
+      background: rgba(255,255,255,0.8);
+      bottom: -45px;
+      left: 50%;
+    }
+
+    .balloon:hover { filter: brightness(1.2); transform: translate(-50%, -50%) scale(1.1); }
+    .balloon.pop { animation: popOut .15s ease-out forwards; pointer-events: none; }
+    @keyframes balloonBob { from { margin-top: -6px; } to { margin-top: 6px; } }
+    @keyframes popOut { to { opacity: 0; transform: translate(-50%, -50%) scale(1.8); } }
+
+    .balloon-red { background: #FF2A6D !important; }
+    .balloon-yellow { background: #FFD600 !important; color: #000 !important; text-shadow: none !important; }
+    .balloon-blue { background: #00E5FF !important; color: #000 !important; text-shadow: none !important; }
+    .balloon-green { background: #00E676 !important; }
+    .balloon-purple { background: #D500F9 !important; }
+    .balloon-orange { background: #FF6D00 !important; }
+
+    /* 로블록스 캐릭터 (Vector/SVG) */
+    .roblox-char {
+      position: absolute;
+      bottom: 0px;
+      pointer-events: none;
+      background-size: contain;
+      background-repeat: no-repeat;
+      z-index: 2;
+    }
+
+    /* 1. 로블록스 대표 캐릭터 (노비 / Noob) */
+    .char-noob {
+      width: 80px; height: 110px; left: 30px;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 130"><rect x="35" y="5" width="30" height="30" rx="4" fill="%23FFD600"/><rect x="42" y="15" width="5" height="5" rx="1" fill="%23000"/><rect x="53" y="15" width="5" height="5" rx="1" fill="%23000"/><path d="M 43 25 Q 50 30 57 25" stroke="%23000" stroke-width="2" fill="none"/><rect x="25" y="38" width="50" height="42" rx="4" fill="%2300E5FF"/><rect x="10" y="38" width="12" height="38" rx="4" fill="%23FFD600"/><rect x="78" y="38" width="12" height="38" rx="4" fill="%23FFD600"/><rect x="27" y="83" width="21" height="42" rx="3" fill="%2300E676"/><rect x="52" y="83" width="21" height="42" rx="3" fill="%2300E676"/></svg>');
+    }
+
+    /* 2. 베이컨 헤어 (Bacon Hair) */
+    .char-bacon {
+      width: 80px; height: 110px; right: 30px;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 130"><path d="M 30 5 Q 50 -5 70 5 Q 75 18 68 18 Q 50 10 32 18 Z" fill="%238D6E63"/><rect x="35" y="10" width="30" height="28" rx="4" fill="%23FFCC80"/><rect x="42" y="18" width="4" height="4" fill="%23000"/><rect x="54" y="18" width="4" height="4" fill="%23000"/><path d="M 44 28 Q 50 32 56 28" stroke="%23000" stroke-width="2" fill="none"/><rect x="25" y="40" width="50" height="40" rx="4" fill="%2337474F"/><rect x="10" y="40" width="12" height="36" rx="4" fill="%23FFCC80"/><rect x="78" y="40" width="12" height="36" rx="4" fill="%23FFCC80"/><rect x="27" y="83" width="21" height="42" rx="3" fill="%231565C0"/><rect x="52" y="83" width="21" height="42" rx="3" fill="%231565C0"/></svg>');
+    }
+
+    .hud-box {
+      border: 3px solid #334155;
+      background: rgba(15, 23, 42, 0.85);
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .toast {
+      position: absolute;
+      left: 50%;
+      top: 20px;
+      z-index: 10;
+      transform: translate(-50%, -20px);
+      opacity: 0;
+      pointer-events: none;
+      padding: 10px 24px;
+      border-radius: 999px;
+      background: #FFD600;
+      color: #000;
+      font-weight: 900;
+      font-size: 1.25rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+      transition: .2s ease;
+    }
+    .toast.show { transform: translate(-50%, 0); opacity: 1; }
+
+    .result-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      background: rgba(11, 16, 29, 0.85);
+      backdrop-filter: blur(8px);
+    }
+    .result-overlay.show { display: grid; }
+    
+    .hidden-panel { display: none !important; }
+  </style>
+ </head>
+ <body>
+  <!-- 수학 기호 패턴 배경 -->
+  <div class="math-bg"></div>
+
+  <div class="app-shell min-h-screen flex flex-col">
+   <!-- 상단 헤더 -->
+   <header class="w-full px-6 py-4 border-b-4 border-slate-800 bg-slate-900/90 flex justify-between items-center">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 bg-red-600 rounded-md rotate-12 flex items-center justify-center font-black text-xl shadow-lg">R</div>
+      <h1 class="text-2xl font-black text-cyan-400 roblox-font tracking-wide">ROBLOX 약수 서바이벌</h1>
+    </div>
+    <div class="bg-slate-800 border-2 border-slate-700 px-4 py-1.5 rounded-full text-amber-300 font-bold text-sm shadow-md">
+      ⏱️ 제한 시간: 1분 (60초)
+    </div>
+   </header>
+
+   <main class="w-full max-w-5xl mx-auto px-4 py-6 flex-1 flex flex-col justify-center">
+    <!-- 게임 시작 대기실 -->
+    <section id="start-panel" class="w-full max-w-md mx-auto bg-slate-900/95 border-4 border-slate-700 p-8 rounded-3xl text-center shadow-2xl">
+     <div class="w-20 h-20 mx-auto mb-3 bg-cyan-500/20 rounded-2xl flex items-center justify-center">
+       <span class="text-5xl">🎈</span>
+     </div>
+     <h2 class="text-3xl font-black text-yellow-400 mb-2 roblox-font">약수 풍선 터뜨리기</h2>
+     <p class="text-slate-300 text-sm mb-6 leading-relaxed">
+       1분 동안 떠다니는 풍선 중 목표 숫자의 <span class="text-cyan-400 font-bold">약수</span>만 터뜨려 점수를 획득하세요!<br>
+       로블록스 아바타들이 응원하고 있습니다 🚀
+     </p>
+     <form id="start-form" class="flex flex-col gap-4">
+      <div>
+       <label class="block text-left text-xs text-slate-400 mb-1.5 font-bold" for="player-name">플레이어 닉네임</label>
+       <input id="player-name" class="w-full bg-slate-800 border-2 border-slate-600 px-4 py-3 rounded-xl font-bold text-white focus:outline-none focus:border-cyan-400" placeholder="RobloxPlayer" maxlength="12" required>
+      </div>
+      <button class="roblox-btn w-full py-4 text-xl font-black rounded-xl cursor-pointer" type="submit">
+        게임 플레이 ▶
+      </button>
+     </form>
+    </section>
+
+    <!-- 게임 플레이 화면 -->
+    <section id="game-panel" class="hidden-panel w-full flex flex-col gap-3">
+     <!-- HUD 상태창 -->
+     <div class="grid grid-cols-3 gap-3">
+      <div class="hud-box p-3 text-center">
+       <p class="text-xs text-slate-400 font-bold">남은 시간</p>
+       <p id="time-value" class="roblox-font text-4xl text-amber-400 font-bold">01:00</p>
+      </div>
+      <div class="hud-box p-3 text-center">
+       <p class="text-xs text-slate-400 font-bold">현재 점수</p>
+       <p id="score-value" class="roblox-font text-4xl text-green-400 font-bold">0</p>
+      </div>
+      <div class="hud-box p-3 text-center">
+       <p class="text-xs text-slate-400 font-bold">찾은 약수</p>
+       <p id="found-value" class="roblox-font text-4xl text-cyan-400 font-bold">0 / 0</p>
+      </div>
+     </div>
+
+     <!-- 목표 숫자 안내 -->
+     <div class="flex justify-between items-center bg-slate-900/80 border-2 border-slate-700 px-5 py-3 rounded-2xl">
+      <div class="flex items-center gap-4">
+       <span class="text-xs text-slate-400 font-bold">목표 숫자:</span>
+       <span id="target-number" class="roblox-font text-5xl font-black text-yellow-300">12</span>
+      </div>
+      <p class="text-sm font-bold text-slate-300">위 숫자의 <span class="text-cyan-400">약수</span> 풍선을 클릭하세요!</p>
+     </div>
+
+     <!-- 게임 스테이지 (로블록스 캐릭터 포함) -->
+     <div id="game-stage" class="game-stage">
+      <div id="feedback-toast" class="toast"></div>
+      <div id="balloon-layer"></div>
+
+      <!-- 로블록스 캐릭터 배치 -->
+      <div class="roblox-char char-noob" title="Noob"></div>
+      <div class="roblox-char char-bacon" title="Bacon Hair"></div>
+     </div>
+    </section>
+   </main>
+
+   <!-- 결과 창 -->
+   <div id="result-overlay" class="result-overlay">
+    <div class="bg-slate-900 border-4 border-slate-700 p-8 rounded-3xl text-center max-w-sm w-full shadow-2xl">
+     <h2 class="text-3xl font-black text-yellow-400 mb-4 roblox-font">게임 종료! 🏆</h2>
+     <div class="bg-slate-800 border-2 border-slate-700 p-5 rounded-2xl mb-6">
+      <p class="text-slate-400 text-sm font-bold">최종 점수</p>
+      <p id="final-score" class="roblox-font text-6xl font-bold text-cyan-400">0점</p>
+     </div>
+     <button id="restart-button" class="roblox-btn w-full py-4 text-lg font-black rounded-xl cursor-pointer">
+       다시 하기 🔄
+     </button>
+    </div>
+   </div>
+  </div>
+
+  <script>
+    const state = {
+      playerName: "",
+      score: 0,
+      target: 12,
+      divisors: [],
+      found: new Set(),
+      timeLeft: 60, // 제한 시간 1분 (60초)
+      timerId: null,
+      gameActive: false
+    };
+
+    const stage = document.getElementById("game-stage");
+    const layer = document.getElementById("balloon-layer");
+    const colors = ["balloon-red", "balloon-yellow", "balloon-blue", "balloon-green", "balloon-purple", "balloon-orange"];
+
+    function getDivisors(number) {
+      const result = [];
+      for (let i = 1; i <= number; i++) {
+        if (number % i === 0) result.push(i);
+      }
+      return result;
+    }
+
+    function randomTarget() {
+      return Math.floor(Math.random() * 80) + 12; // 12~91 사이 숫자로 설정
+    }
+
+    function updateHud() {
+      document.getElementById("score-value").textContent = state.score;
+      const mins = String(Math.floor(state.timeLeft / 60)).padStart(2, "0");
+      const secs = String(state.timeLeft % 60).padStart(2, "0");
+      document.getElementById("time-value").textContent = `${mins}:${secs}`;
+      document.getElementById("target-number").textContent = state.target;
+      document.getElementById("found-value").textContent = `${state.found.size} / ${state.divisors.length}`;
+    }
+
+    function nextRound() {
+      state.target = randomTarget();
+      state.divisors = getDivisors(state.target);
+      state.found = new Set();
+      updateHud();
+      createBalloons();
+    }
+
+    function candidateNumbers() {
+      const remaining = state.divisors.filter(n => !state.found.has(n));
+      const numbers = [...remaining];
+
+      while (numbers.length < Math.max(7, state.divisors.length + 2)) {
+        const candidate = Math.floor(Math.random() * 90) + 1;
+        if (!numbers.includes(candidate) && state.target % candidate !== 0) {
+          numbers.push(candidate);
+        }
+      }
+      return numbers.sort(() => Math.random() - 0.5);
+    }
+
+    function createBalloons() {
+      layer.replaceChildren();
+      candidateNumbers().forEach((number, index) => addBalloon(number, index));
+    }
+
+    function addBalloon(number, index) {
+      const balloon = document.createElement("button");
+      balloon.className = `balloon ${colors[index % colors.length]}`;
+      balloon.textContent = number;
+      balloon.style.left = (12 + Math.random() * 76) + "%";
+      balloon.style.top = (15 + Math.random() * 50) + "%";
+      balloon.style.animationDelay = (-Math.random() * 2) + "s";
+      balloon.dataset.dx = (Math.random() > .5 ? 1 : -1) * (.2 + Math.random() * .2);
+      balloon.dataset.dy = (Math.random() > .5 ? 1 : -1) * (.15 + Math.random() * .15);
+
+      balloon.addEventListener("click", () => hitBalloon(balloon, number));
+      layer.appendChild(balloon);
+    }
+
+    function moveBalloons() {
+      if (state.gameActive) {
+        layer.querySelectorAll(".balloon").forEach(balloon => {
+          let x = parseFloat(balloon.style.left);
+          let y = parseFloat(balloon.style.top);
+          let dx = parseFloat(balloon.dataset.dx);
+          let dy = parseFloat(balloon.dataset.dy);
+
+          x += dx;
+          y += dy;
+
+          if (x < 8 || x > 92) { dx *= -1; x = Math.max(8, Math.min(92, x)); }
+          if (y < 12 || y > 65) { dy *= -1; y = Math.max(12, Math.min(65, y)); }
+
+          balloon.style.left = x + "%";
+          balloon.style.top = y + "%";
+          balloon.dataset.dx = dx;
+          balloon.dataset.dy = dy;
+        });
+      }
+      requestAnimationFrame(moveBalloons);
+    }
+
+    function hitBalloon(balloon, number) {
+      if (!state.gameActive || balloon.classList.contains("pop")) return;
+
+      const isDivisor = state.target % number === 0;
+      balloon.classList.add("pop");
+
+      if (isDivisor && !state.found.has(number)) {
+        const points = 10;
+        state.found.add(number);
+        state.score += points;
+        showFeedback(`정답! +${points}`, "#00E676");
+
+        if (state.found.size === state.divisors.length) {
+          setTimeout(() => {
+            if (state.gameActive) {
+              showFeedback("모든 약수 완성! 다음 라운드!", "#FFD600");
+              nextRound();
+            }
+          }, 350);
+        }
+      } else {
+        state.score = Math.max(0, state.score - 5);
+        showFeedback("약수가 아닙니다! -5", "#FF2A6D");
+      }
+      updateHud();
+    }
+
+    function showFeedback(message, color) {
+      const toast = document.getElementById("feedback-toast");
+      toast.textContent = message;
+      toast.style.backgroundColor = color;
+      toast.classList.add("show");
+      clearTimeout(showFeedback.timeout);
+      showFeedback.timeout = setTimeout(() => toast.classList.remove("show"), 800);
+    }
+
+    function startGame() {
+      state.score = 0;
+      state.timeLeft = 60; // 1분
+      state.gameActive = true;
+
+      document.getElementById("start-panel").classList.add("hidden-panel");
+      document.getElementById("game-panel").classList.remove("hidden-panel");
+      
+      nextRound();
+
+      clearInterval(state.timerId);
+      state.timerId = setInterval(() => {
+        state.timeLeft--;
+        updateHud();
+        if (state.timeLeft <= 0) finishGame();
+      }, 1000);
+    }
+
+    function finishGame() {
+      state.gameActive = false;
+      clearInterval(state.timerId);
+
+      document.getElementById("final-score").textContent = state.score + "점";
+      document.getElementById("result-overlay").classList.add("show");
+    }
+
+    document.getElementById("start-form").addEventListener("submit", e => {
+      e.preventDefault();
+      const name = document.getElementById("player-name").value.trim();
+      if (name) {
+        state.playerName = name;
+        startGame();
+      }
+    });
+
+    document.getElementById("restart-button").addEventListener("click", () => {
+      document.getElementById("result-overlay").classList.remove("show");
+      document.getElementById("game-panel").classList.add("hidden-panel");
+      document.getElementById("start-panel").classList.remove("hidden-panel");
+    });
+
+    // 풍선 무브먼트 루프 시작
+    moveBalloons();
+  </script>
+ </body>
+</html>
