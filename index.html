@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Leaf, Sprout, Sun, Heart, Volume2, VolumeX, BookOpen, Send, 
   User, Compass, ChevronRight, RotateCcw, Sparkles, Feather, Trees,
-  Flower2, Bookmark, Smile, CheckCircle2
+  Flower2, Bookmark, Smile, CheckCircle2, Settings, X
 } from 'lucide-react';
 
 const SYSTEM_INSTRUCTION_BASE = `
@@ -13,20 +13,20 @@ const SYSTEM_INSTRUCTION_BASE = `
 [대화의 본질 및 어조 - 깊은 온도와 절제된 간결함]
 1. 정서적 깊이는 유지하되, 부담 없는 분량으로 간결하게:
    - 기계적인 설명이나 길고 장황한 사족은 내담자에게 피로감을 줄 수 있습니다.
-   - 한눈에 읽히는 정갈한 2~4문장(또는 짧은 1~2단락) 내외로 핵심 공감과 정서적 안식처를 건네세요.
+   - 한눈에 읽히는 정갈한 2~4문장 내외로 핵심 공감과 정서적 안식처를 건네세요.
    - 친근한 대화처럼 부담 없는 리듬감을 유지하세요.
+   - 반드시 모든 답변의 마지막 문장을 완전하게 결론짓고 완결하여 중간에 잘리지 않게 하세요.
 
 2. 영혼 없는 상투어 및 기계적 질문 금지:
    - "많이 힘드셨겠어요", "어떤 심정이신가요?" 같은 로봇 같은 반복 문구나 의무적인 질문을 지양하세요.
-   - 내담자가 털어놓은 문장 너머의 진심과 지침을 있는 그대로 알아채 주고, 진짜 사람이 곁에서 다독여주는 정서적 온기를 짧고 묵직하게 전하세요.
-
-3. 내담자의 마음에 스며드는 부드러운 통찰:
-   - 짧은 글 속에서도 내담자가 미처 깨닫지 못했던 마음의 무게를 부드럽게 짚어주고, 언제든 내담자 편이 되어주는 든든함과 안도감을 주세요.
+   - 내담자가 전한 마음의 결을 진심으로 알아차리고, 따뜻한 언어로 미러링해 주세요.
+   - 무조건적인 취조나 과도한 질문보다는 가만히 옆에 앉아 들어주는 듯한 쉼을 선사하세요.
 `;
 
-async function fetchGeminiCounselingResponse(chatHistory, roleCategory, userMood, isPivotalRequested = false) {
-  const apiKey = ""; // Canvas runtime automatically supplies key if left blank
-  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+async function fetchGeminiCounselingResponse(chatHistory, roleCategory, userMood, isPivotalRequested = false, customApiKey = "") {
+  // Use custom key if provided by user, otherwise fallback to default empty string or environment key
+  const apiKey = customApiKey.trim() || "";
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
   const roleText = roleCategory === 'student' ? '내담자 유형: 학생 (학업, 또래관계, 진로, 자기이해 고민)' : '내담자 유형: 성인 (커리어, 번아웃, 가족, 인간관계 고민)';
   const moodText = userMood ? `현재 내담자가 지닌 대표 마음 상태: [${userMood}]` : '';
@@ -36,7 +36,7 @@ async function fetchGeminiCounselingResponse(chatHistory, roleCategory, userMood
     extraDirective = "\n\n[SPECIAL DIRECTIVE]: 내담자가 현재 고민의 핵심과 해결의 길을 청하고 있습니다. 마음을 깊이 위로하는 진심 어린 언어로 시작하여, 마음의 짐을 덜어줄 실질적이고 따뜻한 2-3가지 생각의 전환이나 선택지(1, 2, 3)를 명확하게 정리해서 건네주세요.";
   }
 
-  const systemPrompt = `${SYSTEM_INSTRUCTION_BASE}\n\n[Current Session Context]\n${roleText}\n${moodText}${extraDirective}`;
+  const systemPrompt = `${SYSTEM_INSTRUCTION_BASE}\n\n[Current Session Context]\n${roleText}\n${moodText}${extraDirective}\n\n[CRITICAL RULE]: 반드시 문장 끝 마침표(.)로 명확하게 완결짓고, 중간에 말이 끊어지지 않도록 한글 2-4문장 내외로 깔끔하게 대답을 마치세요.`;
 
   const contentsPayload = chatHistory.map(msg => ({
     role: msg.role === 'user' ? 'user' : 'model',
@@ -50,7 +50,7 @@ async function fetchGeminiCounselingResponse(chatHistory, roleCategory, userMood
     },
     generationConfig: {
       temperature: 0.8,
-      maxOutputTokens: 400
+      maxOutputTokens: 2048 // Sufficient capacity to prevent Korean text truncation
     }
   };
 
@@ -67,6 +67,9 @@ async function fetchGeminiCounselingResponse(chatHistory, roleCategory, userMood
       });
 
       if (!response.ok) {
+        if (response.status === 429) {
+          throw new Error("API 사용량 제한(Rate Limit)에 도달했습니다. 잠시 후 다시 시도하시거나 [설정]에서 API 키를 입력해 주세요.");
+        }
         throw new Error(`API error: ${response.status}`);
       }
 
@@ -78,7 +81,9 @@ async function fetchGeminiCounselingResponse(chatHistory, roleCategory, userMood
       attempts++;
       if (attempts >= maxRetries) {
         console.error("Gemini API error after retries:", err);
-        return "당신의 지친 마음이 부드러운 바람에 쉬어갈 수 있도록, 가만히 귀 기울이고 있습니다. 편안히 이야기해 주세요.";
+        return err.message.includes("Rate Limit") 
+          ? "현재 상담 방문자가 많아 잠시 쉬어가는 중입니다. 우상단 ⚙️ 설정에서 개인 Gemini API Key를 입력하시면 즉시 원활하게 상담을 이어가실 수 있습니다."
+          : "당신의 지친 마음이 부드러운 바람에 쉬어갈 수 있도록, 가만히 귀 기울이고 있습니다. 편안히 이야기해 주세요.";
       }
       await new Promise(r => setTimeout(r, delay));
       delay *= 2;
@@ -188,6 +193,11 @@ export default function App() {
   const [inputText, setInputText] = useState('');
   const [isBrewing, setIsBrewing] = useState(false);
   const [ambientActive, setAmbientActive] = useState(false);
+  
+  // Custom User API Key for public/GitHub deployments
+  const [userApiKey, setUserApiKey] = useState(() => localStorage.getItem('mind_cafe_gemini_key') || '');
+  const [showKeyModal, setShowKeyModal] = useState(false);
+  const [tempKeyInput, setTempKeyInput] = useState(userApiKey);
 
   const [journalEntries, setJournalEntries] = useState([
     {
@@ -271,7 +281,7 @@ export default function App() {
 
     setWarmthLevel(prev => Math.min(38.0, +(prev + 0.2).toFixed(1)));
 
-    const aiText = await fetchGeminiCounselingResponse(newHistory, category, selectedMood, false);
+    const aiText = await fetchGeminiCounselingResponse(newHistory, category, selectedMood, false, userApiKey);
 
     const aiMsg = {
       id: (Date.now() + 1).toString(),
@@ -298,7 +308,7 @@ export default function App() {
     const updatedHistory = [...chatMessages, userPromptMsg];
     setChatMessages(updatedHistory);
 
-    const pivotalText = await fetchGeminiCounselingResponse(updatedHistory, category, selectedMood, true);
+    const pivotalText = await fetchGeminiCounselingResponse(updatedHistory, category, selectedMood, true, userApiKey);
 
     const aiMsg = {
       id: (Date.now() + 1).toString(),
@@ -320,6 +330,12 @@ export default function App() {
       plantTag: category === 'student' ? '따스한 햇빛 품은 올리브' : '고요한 무화과 나뭇잎'
     };
     setJournalEntries(prev => [newEntry, ...prev]);
+  };
+
+  const handleSaveApiKey = () => {
+    setUserApiKey(tempKeyInput.trim());
+    localStorage.setItem('mind_cafe_gemini_key', tempKeyInput.trim());
+    setShowKeyModal(false);
   };
 
   const toggleAmbient = () => {
@@ -545,6 +561,16 @@ export default function App() {
             <span className="text-[#3A5A40] font-mono font-bold">{warmthLevel}°C</span>
           </div>
 
+          {/* API Key Modal Toggle */}
+          <button
+            onClick={() => setShowKeyModal(true)}
+            className="p-1.5 rounded-xl bg-white border border-[#E3DCD0] hover:bg-[#E8F0E6] text-[#6B7C6C] text-xs font-medium flex items-center gap-1"
+            title="API Key 설정 (배포용)"
+          >
+            <Settings className="w-4 h-4 text-[#588157]" />
+            <span className="hidden md:inline">{userApiKey ? '키 설정됨' : 'API키 입력'}</span>
+          </button>
+
           {/* Ambient Sound Switch */}
           <button
             onClick={toggleAmbient}
@@ -570,22 +596,58 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Conversation Canvas */}
-      <main className="relative z-10 flex-1 max-w-2xl w-full mx-auto p-4 sm:p-6 overflow-y-auto flex flex-col justify-between">
-        <div className="space-y-5 pb-6">
-          {/* Gentle Top Banner */}
-          <div className="text-center py-2">
-            <span className="text-[11px] text-[#556656] bg-white/80 px-3.5 py-1 rounded-full border border-[#E3DCD0] shadow-sm inline-flex items-center gap-1.5">
-              <Trees className="w-3.5 h-3.5 text-[#588157]" /> 햇살과 나뭇잎 그늘 아래서 당신의 마음을 편히 놓아두세요.
-            </span>
+      {/* API Key Settings Modal */}
+      {showKeyModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white border border-[#E3DCD0] rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 font-sans relative">
+            <button 
+              onClick={() => setShowKeyModal(false)}
+              className="absolute top-4 right-4 text-[#889989] hover:text-[#2D372E]"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="font-serif font-bold text-lg text-[#1E2B20] flex items-center gap-2">
+              <Settings className="w-5 h-5 text-[#588157]" /> Gemini API Key 설정
+            </h3>
+            <p className="text-xs text-[#556656] leading-relaxed">
+              깃허브 배포 환경 등에서 사용량 제한 걱정 없이 마음껏 대화하시려면 Google AI Studio에서 무료로 발급받은 개인 Gemini API Key를 입력해 주세요. (브라우저 내부에만 안전하게 보관됩니다)
+            </p>
+            <input
+              type="password"
+              value={tempKeyInput}
+              onChange={(e) => setTempKeyInput(e.target.value)}
+              placeholder="AIzaSy..."
+              className="w-full bg-[#FAF9F5] border border-[#E3DCD0] rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#588157]"
+            />
+            <div className="flex justify-end space-x-2 pt-2">
+              <button
+                onClick={() => setShowKeyModal(false)}
+                className="px-4 py-2 text-xs border border-[#E3DCD0] rounded-xl hover:bg-[#FAF9F5]"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleSaveApiKey}
+                className="px-4 py-2 text-xs bg-[#3A5A40] text-white rounded-xl font-bold hover:bg-[#2D4532]"
+              >
+                저장하기
+              </button>
+            </div>
           </div>
+        </div>
+      )}
 
+      {/* Main Chat Stream Container */}
+      <main className="flex-1 relative z-10 max-w-2xl w-full mx-auto p-4 flex flex-col justify-between overflow-y-auto">
+        <div className="space-y-4 py-2">
           {chatMessages.map((msg) => {
             const isUser = msg.role === 'user';
             return (
               <div
                 key={msg.id}
-                className={`flex ${isUser ? 'justify-end' : 'justify-start'} items-start space-x-2.5`}
+                className={`flex items-start space-x-2.5 ${
+                  isUser ? 'flex-row-reverse space-x-reverse' : 'flex-row'
+                }`}
               >
                 {!isUser && (
                   <div className="w-8 h-8 rounded-2xl bg-[#588157] text-white flex items-center justify-center shrink-0 mt-1 shadow-sm">
@@ -593,7 +655,7 @@ export default function App() {
                   </div>
                 )}
 
-                <div className={`max-w-[85%] sm:max-w-[78%] space-y-1`}>
+                <div className="max-w-[85%] sm:max-w-[78%] space-y-1">
                   <div
                     className={`p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
                       isUser
@@ -696,7 +758,7 @@ export default function App() {
           </form>
           <div className="flex justify-between items-center text-[10px] text-[#6B7C6C] mt-2 px-1">
             <span>취조하지 않는 다정한 경청과 관통하는 솔루션을 제공합니다.</span>
-            <span>Gemini 3 Flash Engine</span>
+            <span>Gemini Engine Powered</span>
           </div>
         </div>
       </footer>
