@@ -1,767 +1,1162 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Leaf, Sprout, Sun, Heart, Volume2, VolumeX, BookOpen, Send, 
-  User, Compass, ChevronRight, RotateCcw, Sparkles, Feather, Trees,
-  Flower2, Bookmark, Smile, CheckCircle2, Settings, X
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>마음온 (Maeum-On) — AI 정서 지지 & 마음 케어</title>
+<!-- Tailwind CSS via CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Font Awesome Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Google Fonts: Noto Sans KR & Noto Serif KR -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@600;700&display=swap">
 
-const SYSTEM_INSTRUCTION_BASE = `
-[역할 및 정체성]
-당신은 Gemini 본연의 진정성 있는 공감 능력과 정교한 정서적 통찰력을 지닌 '마음 쉼터 Companion'입니다.
-햇살이 비치는 화이트 우드와 싱그러운 나뭇잎이 어우러진 공간에서 내담자의 지친 마음에 가만히 귀를 기울입니다.
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          deepBg: '#121526',
+          panelBg: '#1b2038',
+          cardBg: '#252b48',
+          accentSage: '#8fb8a4',
+          accentSageDark: '#6d9885',
+          accentRose: '#d9a3a0',
+          crisisCoral: '#c8583f',
+          warmText: '#f3efea',
+          subText: '#a49fbd'
+        },
+        fontFamily: {
+          sans: ['Noto Sans KR', 'sans-serif'],
+          serif: ['Noto Serif KR', 'serif']
+        }
+      }
+    }
+  }
+</script>
 
-[대화의 본질 및 어조 - 깊은 온도와 절제된 간결함]
-1. 정서적 깊이는 유지하되, 부담 없는 분량으로 간결하게:
-   - 기계적인 설명이나 길고 장황한 사족은 내담자에게 피로감을 줄 수 있습니다.
-   - 한눈에 읽히는 정갈한 2~4문장 내외로 핵심 공감과 정서적 안식처를 건네세요.
-   - 친근한 대화처럼 부담 없는 리듬감을 유지하세요.
-   - 반드시 모든 답변의 마지막 문장을 완전하게 결론짓고 완결하여 중간에 잘리지 않게 하세요.
+<style>
+:root {
+  --sage: #8fb8a4;
+  --sage-dark: #6d9885;
+  --coral: #c8583f;
+}
 
-2. 영혼 없는 상투어 및 기계적 질문 금지:
-   - "많이 힘드셨겠어요", "어떤 심정이신가요?" 같은 로봇 같은 반복 문구나 의무적인 질문을 지양하세요.
-   - 내담자가 전한 마음의 결을 진심으로 알아차리고, 따뜻한 언어로 미러링해 주세요.
-   - 무조건적인 취조나 과도한 질문보다는 가만히 옆에 앉아 들어주는 듯한 쉼을 선사하세요.
+body {
+  background-color: #0b0d19;
+  color: #f3efea;
+  font-family: 'Noto Sans KR', sans-serif;
+  touch-action: manipulation;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Breathing Orb Animation */
+@keyframes orbPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 35px rgba(143, 184, 164, 0.3);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.15);
+    box-shadow: 0 0 60px rgba(143, 184, 164, 0.6);
+    opacity: 1;
+  }
+}
+
+.orb-glow {
+  background: radial-gradient(circle at 35% 30%, #8fb8a4, #4a7563);
+  animation: orbPulse 5s ease-in-out infinite;
+}
+
+/* Interactive Breathing Circle Dynamic Scale */
+.breath-circle {
+  transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Slide in animation */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Custom Input Focus Glow */
+textarea:focus, input:focus {
+  outline: none;
+  border-color: #8fb8a4 !important;
+  box-shadow: 0 0 12px rgba(143, 184, 164, 0.25);
+}
+</style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex justify-center items-center">
+
+<div id="app" class="w-full max-w-md md:max-w-xl h-full md:h-[92vh] bg-deepBg md:rounded-3xl shadow-2xl flex flex-col overflow-hidden relative border border-white/10">
+
+  <!-- TOP HEADER -->
+  <header class="bg-panelBg px-4 py-3 border-b border-white/10 flex items-center justify-between flex-shrink-0 z-20">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-full orb-glow flex items-center justify-center flex-shrink-0 cursor-pointer" onclick="switchTab('chat')">
+        <i class="fa-solid fa-leaf text-deepBg text-xs"></i>
+      </div>
+      <div>
+        <h1 class="font-serif font-bold text-base text-warmText flex items-center gap-2">
+          마음온 <span class="text-[10px] font-sans font-normal bg-accentSage/20 text-accentSage px-2 py-0.5 rounded-full">AI 정서케어</span>
+        </h1>
+        <p class="text-[11px] text-subText">당신의 이야기를 따뜻하게 듣습니다</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <!-- Voice Toggle -->
+      <button id="tts-toggle-btn" onclick="toggleTTS()" class="p-2 text-xs rounded-xl bg-white/5 hover:bg-white/10 text-subText transition border border-white/5 flex items-center gap-1.5" title="AI 목소리 켜기/끄기">
+        <i class="fa-solid fa-volume-xmark text-slate-400" id="tts-icon"></i>
+        <span class="hidden sm:inline text-[11px]" id="tts-status">음성 끔</span>
+      </button>
+
+      <!-- Emergency SOS Button -->
+      <button onclick="switchTab('crisis')" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-crisisCoral/20 border border-crisisCoral/40 text-crisisCoral hover:bg-crisisCoral/30 transition flex items-center gap-1">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <span>SOS 위기</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTENT VIEWS CONTAINER -->
+  <main class="flex-1 overflow-hidden relative bg-deepBg">
+    
+    <!-- ==================== TAB 1: CHAT VIEW ==================== -->
+    <section id="view-chat" class="h-full flex flex-col justify-between">
+      
+      <!-- Notice Banner -->
+      <div class="bg-panelBg/80 px-4 py-2 border-b border-white/5 text-[11px] text-subText flex justify-between items-center flex-shrink-0">
+        <span class="flex items-center gap-1.5">
+          <i class="fa-solid fa-shield-halved text-accentSage"></i>
+          비밀보장 · 진단/치료 대체 불가 · 익명 보장
+        </span>
+        <button onclick="clearChatHistory()" class="text-xs text-subText hover:text-warmText underline">대화 초기화</button>
+      </div>
+
+      <!-- Messages Area -->
+      <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4">
+        <!-- AI Initial Greeting Message -->
+        <div class="flex gap-3 max-w-[88%] animate-slide-up">
+          <div class="w-8 h-8 rounded-full bg-accentSage/20 text-accentSage flex items-center justify-center flex-shrink-0 border border-accentSage/30">
+            <i class="fa-solid fa-leaf text-sm"></i>
+          </div>
+          <div class="space-y-1">
+            <div class="bg-panelBg border border-white/10 p-3.5 rounded-2xl rounded-tl-none text-sm text-warmText leading-relaxed shadow-sm">
+              안녕하세요. 저는 당신의 이야기를 경청하고 마음을 살피는 <b>마음온</b>이에요. 🌱<br><br>
+              오늘 어떤 생각이나 감정이 마음을 채우고 있나요? 부담 없이 편안하게 적어주세요.
+            </div>
+            <div class="text-[10px] text-subText px-1">방금 전</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Typing Indicator -->
+      <div id="chat-typing" class="hidden px-4 py-2 text-xs text-subText flex items-center gap-2">
+        <div class="w-2 h-2 bg-accentSage rounded-full animate-ping"></div>
+        <span>마음온이 따뜻한 답변을 생각하고 있어요...</span>
+      </div>
+
+      <!-- Chat Input Panel -->
+      <div class="p-3 bg-panelBg border-t border-white/10 flex-shrink-0">
+        <!-- Quick Sentiment Pills -->
+        <div class="flex gap-1.5 overflow-x-auto pb-2 mb-1 no-scrollbar text-xs">
+          <button onclick="sendQuickPrompt('요즘 마음이 너무 우울하고 기운이 없어요.')" class="bg-white/5 hover:bg-white/10 text-subText hover:text-warmText px-3 py-1 rounded-full whitespace-nowrap border border-white/5 transition">🌧️ 막막하고 우울해요</button>
+          <button onclick="sendQuickPrompt('생각이 많아서 마음이 불안하고 조급해요.')" class="bg-white/5 hover:bg-white/10 text-subText hover:text-warmText px-3 py-1 rounded-full whitespace-nowrap border border-white/5 transition">⚡ 답답하고 불안해요</button>
+          <button onclick="sendQuickPrompt('누군가에게 털어놓지 못하는 외로움이 있어요.')" class="bg-white/5 hover:bg-white/10 text-subText hover:text-warmText px-3 py-1 rounded-full whitespace-nowrap border border-white/5 transition">🌌 외롭고 힘들어요</button>
+        </div>
+
+        <div class="flex items-end gap-2 bg-deepBg p-2 rounded-2xl border border-white/10">
+          <!-- Mic Input Button -->
+          <button id="mic-btn" onclick="toggleSpeechRecognition()" class="p-2.5 rounded-xl text-subText hover:text-accentSage hover:bg-white/5 transition flex-shrink-0" title="음성 입력">
+            <i class="fa-solid fa-microphone text-base" id="mic-icon"></i>
+          </button>
+
+          <!-- Textarea -->
+          <textarea id="chat-input" rows="1" placeholder="마음에 남은 이야기를 들려주세요..." class="flex-1 bg-transparent border-none text-sm text-warmText resize-none max-h-28 min-h-[40px] py-2 px-1 focus:outline-none placeholder-subText/60"></textarea>
+
+          <!-- Send Button -->
+          <button id="chat-send-btn" onclick="handleUserSend()" class="px-4 py-2 bg-accentSage hover:bg-accentSageDark text-deepBg font-bold rounded-xl transition text-sm flex items-center justify-center flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed">
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: BREATHING VIEW ==================== -->
+    <section id="view-breathing" class="h-full hidden flex-col items-center justify-between p-6 text-center overflow-y-auto">
+      <div>
+        <h2 class="text-xl font-serif font-bold text-warmText mb-1">마음 호흡 가이드</h2>
+        <p class="text-xs text-subText">숨을 고르면 경직된 마음과 신경이 부드럽게 이완됩니다.</p>
+      </div>
+
+      <!-- Breathing Visualizer Orb -->
+      <div class="my-auto flex flex-col items-center justify-center py-6">
+        <div class="relative w-64 h-64 flex items-center justify-center">
+          <!-- Outer Ring -->
+          <div class="absolute inset-0 border-2 border-dashed border-accentSage/30 rounded-full"></div>
+          
+          <!-- Animated Circle -->
+          <div id="breath-orb" class="breath-circle w-44 h-44 rounded-full bg-gradient-to-br from-accentSage via-accentSageDark to-panelBg shadow-2xl flex flex-col items-center justify-center border border-white/20">
+            <span id="breath-action" class="font-serif text-lg font-bold text-deepBg">준비</span>
+            <span id="breath-timer" class="text-2xl font-extrabold text-deepBg mt-1">4</span>
+          </div>
+        </div>
+
+        <p id="breath-subtext" class="text-sm text-subText mt-6 h-8 px-4">
+          아래 버튼을 눌러 편안하게 호흡을 시작해보세요.
+        </p>
+      </div>
+
+      <!-- Controls -->
+      <div class="w-full space-y-4">
+        <!-- Technique Selector -->
+        <div class="flex justify-center gap-2 text-xs">
+          <button id="mode-478" onclick="setBreathingTechnique('478')" class="px-4 py-2 rounded-xl bg-accentSage/20 text-accentSage border border-accentSage/40 font-bold">
+            4-7-8 이완 호흡
+          </button>
+          <button id="mode-box" onclick="setBreathingTechnique('box')" class="px-4 py-2 rounded-xl bg-white/5 text-subText border border-white/10 hover:bg-white/10">
+            박스 호흡 (4-4-4-4)
+          </button>
+        </div>
+
+        <div class="flex items-center justify-center gap-3">
+          <button id="breath-start-btn" onclick="toggleBreathingSession()" class="flex-1 py-3 bg-accentSage text-deepBg font-bold rounded-2xl shadow-lg hover:bg-accentSageDark transition">
+            <i class="fa-solid fa-play mr-1"></i> 호흡 시작
+          </button>
+          <button onclick="resetBreathingSession()" class="px-4 py-3 bg-white/5 text-subText hover:text-warmText rounded-2xl border border-white/10">
+            <i class="fa-solid fa-rotate-right"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: MOOD JOURNAL VIEW ==================== -->
+    <section id="view-journal" class="h-full hidden flex-col p-5 overflow-y-auto space-y-5">
+      <div>
+        <h2 class="text-xl font-serif font-bold text-warmText mb-1">감정 일기장</h2>
+        <p class="text-xs text-subText">오늘 스쳐 지나간 감정을 솔직하게 남겨두세요.</p>
+      </div>
+
+      <!-- New Entry Form -->
+      <div class="bg-panelBg p-4 rounded-2xl border border-white/10 space-y-4">
+        <h3 class="text-xs font-bold text-accentSage uppercase tracking-wider">오늘의 주요 감정</h3>
+        
+        <!-- Mood Selector Buttons -->
+        <div class="grid grid-cols-3 gap-2" id="mood-picker">
+          <button onclick="selectMood('평온', '😊')" class="mood-btn p-2.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 flex flex-col items-center gap-1 text-xs text-subText">
+            <span class="text-xl">😊</span><span>평온함</span>
+          </button>
+          <button onclick="selectMood('희망', '🌿')" class="mood-btn p-2.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 flex flex-col items-center gap-1 text-xs text-subText">
+            <span class="text-xl">🌿</span><span>희망참</span>
+          </button>
+          <button onclick="selectMood('우울', '🌧️')" class="mood-btn p-2.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 flex flex-col items-center gap-1 text-xs text-subText">
+            <span class="text-xl">🌧️</span><span>우울함</span>
+          </button>
+          <button onclick="selectMood('불안', '⚡')" class="mood-btn p-2.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 flex flex-col items-center gap-1 text-xs text-subText">
+            <span class="text-xl">⚡</span><span>불안함</span>
+          </button>
+          <button onclick="selectMood('분노', '🔥')" class="mood-btn p-2.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 flex flex-col items-center gap-1 text-xs text-subText">
+            <span class="text-xl">🔥</span><span>답답/화남</span>
+          </button>
+          <button onclick="selectMood('외로움', '🌌')" class="mood-btn p-2.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 flex flex-col items-center gap-1 text-xs text-subText">
+            <span class="text-xl">🌌</span><span>외로움</span>
+          </button>
+        </div>
+
+        <!-- Emotion Intensity Slider -->
+        <div class="space-y-1">
+          <div class="flex justify-between text-xs text-subText">
+            <span>감정의 강도</span>
+            <span id="intensity-val" class="text-accentSage font-bold">5 / 10</span>
+          </div>
+          <input type="range" id="intensity-slider" min="1" max="10" value="5" oninput="updateIntensityDisplay(this.value)" class="w-full accent-accentSage">
+        </div>
+
+        <!-- Journal Text -->
+        <textarea id="journal-text" rows="3" placeholder="어떤 일이 있었나요? 마음속 감정을 자유롭게 적어보세요..." class="w-full bg-deepBg p-3 rounded-xl text-xs text-warmText border border-white/10 placeholder-subText/50"></textarea>
+
+        <button onclick="saveJournalEntry()" class="w-full py-2.5 bg-accentSage text-deepBg font-bold text-xs rounded-xl hover:bg-accentSageDark transition">
+          <i class="fa-solid fa-bookmark mr-1"></i> 감정 기록 저장하기
+        </button>
+      </div>
+
+      <!-- History List -->
+      <div class="space-y-3">
+        <h3 class="text-xs font-bold text-subText uppercase tracking-wider flex justify-between items-center">
+          <span>최근 기록한 마음</span>
+          <button onclick="clearJournalEntries()" class="text-[10px] text-subText underline">기록 전체 삭제</button>
+        </h3>
+        <div id="journal-history" class="space-y-2">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: GROUNDING TOOLS VIEW ==================== -->
+    <section id="view-grounding" class="h-full hidden flex-col p-5 overflow-y-auto space-y-5">
+      <div>
+        <h2 class="text-xl font-serif font-bold text-warmText mb-1">마음 자극 그라운딩 (5-4-3-2-1)</h2>
+        <p class="text-xs text-subText">생각이 너무 복잡할 때 현재의 오감으로 감각을 돌려놓는 기법입니다.</p>
+      </div>
+
+      <!-- Grounding Wizard Steps -->
+      <div id="grounding-card" class="bg-panelBg p-5 rounded-2xl border border-white/10 space-y-4 text-center">
+        <div class="w-12 h-12 rounded-2xl bg-accentSage/20 text-accentSage flex items-center justify-center mx-auto text-xl border border-accentSage/30">
+          <i id="grounding-icon" class="fa-solid fa-eye"></i>
+        </div>
+        <h3 id="grounding-step-title" class="font-bold text-base text-warmText">1단계: 눈에 보이는 것 5가지</h3>
+        <p id="grounding-step-desc" class="text-xs text-subText leading-relaxed">
+          지금 눈앞 주변을 둘러보세요.<br>평소 보지 못했던 소품, 색상, 창밖의 풍경 등 5가지를 속으로 천천히 떠올려보세요.
+        </p>
+
+        <div class="flex justify-between items-center pt-2">
+          <button id="grounding-prev-btn" onclick="prevGroundingStep()" class="px-3 py-1.5 bg-white/5 text-subText rounded-xl text-xs border border-white/10 disabled:opacity-30">
+            이전
+          </button>
+          <span id="grounding-progress" class="text-xs font-bold text-accentSage">1 / 5</span>
+          <button id="grounding-next-btn" onclick="nextGroundingStep()" class="px-4 py-1.5 bg-accentSage text-deepBg font-bold rounded-xl text-xs">
+            다음단계 <i class="fa-solid fa-chevron-right ml-1"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Positive Affirmation Generator -->
+      <div class="bg-panelBg p-5 rounded-2xl border border-white/10 space-y-3">
+        <h3 class="text-xs font-bold text-accentSage uppercase tracking-wider flex items-center gap-1.5">
+          <i class="fa-solid fa-sun text-amber-400"></i> 오늘의 따뜻한 자기 대화
+        </h3>
+        <p id="affirmation-text" class="text-sm font-serif italic text-warmText leading-relaxed p-3 bg-deepBg rounded-xl border border-white/5 text-center">
+          "지금의 불안은 잠시 스쳐 지나가는 구름일 뿐이에요. 나는 여전히 안전합니다."
+        </p>
+        <button onclick="generateNewAffirmation()" class="w-full py-2 bg-white/5 hover:bg-white/10 text-subText hover:text-warmText text-xs rounded-xl border border-white/5 transition">
+          <i class="fa-solid fa-arrows-rotate mr-1"></i> 다른 문장 읽기
+        </button>
+      </div>
+
+      <!-- Personal Safety Plan -->
+      <div class="bg-panelBg p-4 rounded-2xl border border-white/10 space-y-3">
+        <h3 class="text-xs font-bold text-crisisCoral uppercase tracking-wider">나의 나만의 안심 메모 (Safety Plan)</h3>
+        <p class="text-[11px] text-subText">마음이 걷잡을 수 없이 흔들릴 때 나를 지켜줄 행동을 적어두세요.</p>
+        <input type="text" id="safety-action" placeholder="예: 따뜻한 차 마시기, 좋아하는 음악 듣기, 친구 ○○에게 전화하기" class="w-full bg-deepBg p-3 rounded-xl text-xs text-warmText border border-white/10">
+        <button onclick="saveSafetyPlan()" class="w-full py-2 bg-crisisCoral/20 text-crisisCoral font-bold text-xs rounded-xl border border-crisisCoral/30 hover:bg-crisisCoral/30 transition">
+          안심 메모 저장하기
+        </button>
+        <p id="safety-plan-display" class="text-xs text-warmText italic bg-deepBg/50 p-2.5 rounded-xl hidden border border-white/5"></p>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 5: CRISIS HOTLINES VIEW ==================== -->
+    <section id="view-crisis" class="h-full hidden flex-col p-5 overflow-y-auto space-y-4 bg-gradient-to-b from-crisisCoral/10 via-deepBg to-deepBg">
+      <div class="bg-crisisCoral/20 p-4 rounded-2xl border border-crisisCoral/40 text-center space-y-2">
+        <i class="fa-solid fa-heart-pulse text-crisisCoral text-3xl"></i>
+        <h2 class="text-lg font-bold text-warmText">혼자 감당하지 않아도 됩니다</h2>
+        <p class="text-xs text-warmText/80 leading-relaxed">
+          지금 느끼는 고통과 무거운 짐은 당신 혼자만의 몫이 아닙니다.<br>
+          언제든 익명으로 당신의 이야기를 들어줄 전문가들이 기다리고 있습니다.
+        </p>
+      </div>
+
+      <!-- Quick Call Cards -->
+      <div class="space-y-2.5" id="crisis-list">
+        <!-- Rendered by JS -->
+      </div>
+
+      <div class="p-4 bg-panelBg rounded-2xl border border-white/10 space-y-2 text-xs">
+        <h4 class="font-bold text-warmText flex items-center gap-1.5">
+          <i class="fa-solid fa-comment-sms text-accentSage"></i> 문자로 마음 털어놓기
+        </h4>
+        <p class="text-subText leading-relaxed">
+          전화 통화가 부담스럽다면, 문자로도 전문가 상담이 가능합니다.<br>
+          • <b>1388</b> (청소년 및 보호자 문자 상담)<br>
+          • <b>109</b> (24시간 통합 자살예방 상담)
+        </p>
+      </div>
+
+      <button onclick="switchTab('chat')" class="w-full py-3 bg-white/10 hover:bg-white/15 text-warmText font-bold text-xs rounded-2xl border border-white/10 transition">
+        ← 마음온 AI 대화로 돌아가기
+      </button>
+    </section>
+
+  </main>
+
+  <!-- BOTTOM NAVIGATION BAR -->
+  <nav class="bg-panelBg border-t border-white/10 px-2 py-2 flex justify-around items-center flex-shrink-0 z-20">
+    <button onclick="switchTab('chat')" id="nav-chat" class="nav-btn flex flex-col items-center gap-1 p-2 text-accentSage transition">
+      <i class="fa-solid fa-comments text-base"></i>
+      <span class="text-[10px] font-bold">대화</span>
+    </button>
+    <button onclick="switchTab('breathing')" id="nav-breathing" class="nav-btn flex flex-col items-center gap-1 p-2 text-subText hover:text-warmText transition">
+      <i class="fa-solid fa-wind text-base"></i>
+      <span class="text-[10px]">호흡케어</span>
+    </button>
+    <button onclick="switchTab('journal')" id="nav-journal" class="nav-btn flex flex-col items-center gap-1 p-2 text-subText hover:text-warmText transition">
+      <i class="fa-solid fa-book-bookmark text-base"></i>
+      <span class="text-[10px]">감정일기</span>
+    </button>
+    <button onclick="switchTab('grounding')" id="nav-grounding" class="nav-btn flex flex-col items-center gap-1 p-2 text-subText hover:text-warmText transition">
+      <i class="fa-solid fa-brain text-base"></i>
+      <span class="text-[10px]">그라운딩</span>
+    </button>
+    <button onclick="switchTab('crisis')" id="nav-crisis" class="nav-btn flex flex-col items-center gap-1 p-2 text-subText hover:text-warmText transition">
+      <i class="fa-solid fa-phone-volume text-base"></i>
+      <span class="text-[10px]">위기상담</span>
+    </button>
+  </nav>
+
+</div>
+
+<!-- JAVASCRIPT LOGIC -->
+<script>
+
+// API Key (Canvas automatically supplies key at runtime if empty string)
+const API_KEY = "";
+
+// State
+let conversationHistory = [];
+let isVoiceEnabled = false;
+let isRecognizing = false;
+let speechRecognitionObj = null;
+
+// Crisis Resources Data
+const CRISIS_RESOURCES = [
+  { name: '자살예방 상담전화 (통합 109)', num: '109', desc: '24시간 · 전국 어디서나 익명 무료 상담', tag: '24시간' },
+  { name: '정신건강 위기상담전화', num: '1577-0199', desc: '24시간 · 정신건강 전문 상담원 연결', tag: '정신건강' },
+  { name: '청소년 상담전화 1388', num: '1388', desc: '24시간 · 청소년 및 보호자 문자/전화 상담', tag: '청소년' },
+  { name: '여성긴급전화 1366', num: '1366', desc: '24시간 · 가정폭력·성폭력·데이트폭력 긴급 지원', tag: '긴급보호' },
+  { name: '생명의 전화', num: '1588-9191', desc: '24시간 · 삶의 위기 및 우울증 상담', tag: '24시간' }
+];
+
+// Initialize on Load
+window.onload = function() {
+  renderCrisisResources();
+  loadJournalEntries();
+  loadSafetyPlan();
+  initSpeechRecognition();
+
+  // Auto resize chat input
+  const chatInput = document.getElementById('chat-input');
+  chatInput.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 112) + 'px';
+  });
+
+  chatInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleUserSend();
+    }
+  });
+};
+
+function switchTab(tabId) {
+  const views = ['chat', 'breathing', 'journal', 'grounding', 'crisis'];
+  views.forEach(v => {
+    const el = document.getElementById(`view-${v}`);
+    const nav = document.getElementById(`nav-${v}`);
+    if (v === tabId) {
+      el.classList.remove('hidden');
+      el.classList.add('flex');
+      nav.classList.add('text-accentSage');
+      nav.classList.remove('text-subText');
+    } else {
+      el.classList.add('hidden');
+      el.classList.remove('flex');
+      nav.classList.remove('text-accentSage');
+      nav.classList.add('text-subText');
+    }
+  });
+}
+
+function renderCrisisResources() {
+  const container = document.getElementById('crisis-list');
+  container.innerHTML = CRISIS_RESOURCES.map(r => `
+    <div class="bg-panelBg border border-white/10 rounded-2xl p-3.5 flex justify-between items-center gap-3">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-sm text-warmText">${r.name}</span>
+          <span class="text-[9px] bg-crisisCoral/20 text-crisisCoral px-1.5 py-0.5 rounded-full font-bold">${r.tag}</span>
+        </div>
+        <p class="text-[11px] text-subText mt-0.5">${r.desc}</p>
+      </div>
+      <a href="tel:${r.num.replace(/-/g,'')}" class="px-3 py-2 bg-crisisCoral text-white font-bold text-xs rounded-xl hover:bg-crisisCoral/80 transition whitespace-nowrap flex items-center gap-1 shadow-md">
+        <i class="fa-solid fa-phone"></i> ${r.num}
+      </a>
+    </div>
+  `).join('');
+}
+
+async function handleUserSend() {
+  const inputEl = document.getElementById('chat-input');
+  const userText = inputEl.value.trim();
+  if (!userText) return;
+
+  inputEl.value = '';
+  inputEl.style.height = 'auto';
+
+  // Render User Message
+  appendChatMessage('user', userText);
+
+  // Push to context
+  conversationHistory.push({ role: 'user', parts: [{ text: userText }] });
+
+  // Toggle UI state
+  document.getElementById('chat-send-btn').disabled = true;
+  document.getElementById('chat-typing').classList.remove('hidden');
+
+  try {
+    const aiResponse = await fetchGeminiChatResponse(conversationHistory);
+    document.getElementById('chat-typing').classList.add('hidden');
+
+    // Append AI Response
+    appendChatMessage('ai', aiResponse.reply, aiResponse.emotion, aiResponse.suggestedExercise);
+
+    // Save turn to history
+    conversationHistory.push({ role: 'model', parts: [{ text: aiResponse.reply }] });
+
+    // Handle Risk Level
+    if (aiResponse.riskLevel === 'crisis') {
+      appendSysNotice('⚠️ 현재 상황이 많이 힘겹게 느껴지실 수 있습니다. 안전을 위해 전문가의 도움을 바로 연결해드릴게요.');
+      setTimeout(() => switchTab('crisis'), 1500);
+    }
+
+    // Audio Playback if TTS active
+    if (isVoiceEnabled && aiResponse.reply) {
+      speakResponseTTS(aiResponse.reply);
+    }
+
+  } catch (error) {
+    console.error('Gemini API Error:', error);
+    document.getElementById('chat-typing').classList.add('hidden');
+    appendChatMessage('ai', '지금 대화 연결이 잠시 고르지 않네요. 괜찮으시다면 방금 해주신 이야기를 다시 한 번 알려주시겠어요?');
+  } finally {
+    document.getElementById('chat-send-btn').disabled = false;
+  }
+}
+
+function sendQuickPrompt(promptText) {
+  document.getElementById('chat-input').value = promptText;
+  handleUserSend();
+}
+
+async function fetchGeminiChatResponse(history) {
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${API_KEY}`;
+
+  const systemPrompt = `
+당신은 한국의 따뜻하고 심리적 안정감을 제공하는 AI 정서 지지 대화 상대 "마음온"입니다.
+다음 지침을 엄격히 따라 응답하세요:
+
+1. **역할 및 태도**:
+   - 비심판적이고 비판 없는 따뜻한 경청자 태도를 유지합니다.
+   - 내담자의 감정을 있는 그대로 수용하고(검증 및 공감), 따뜻한 존댓말을 사용합니다.
+   - 진단, 약물 처방, 의학적/전문 치료 판정을 절대 내리지 않습니다.
+
+2. **구조화된 출력 (JSON)**:
+   반드시 다음 JSON 형식에 맞추어 출력해야 합니다:
+   {
+     "reply": "공감과 따뜻함을 담은 2~4문장의 내담자 맞춤 응답",
+     "emotion": "내담자의 핵심 감정 단어 (우울, 불안, 분노, 외로움, 평온, 희망 등)",
+     "riskLevel": "위기 수준 Assessment (none, watch, crisis 중 하나)",
+     "suggestedExercise": "추천 케어 (none, breathing, journal, grounding, crisis 중 하나)"
+   }
+
+3. **위기 감지 (Risk Level)**:
+   - 자해, 자살 시도/생각, 구체적 수단 언급, 극단적 절망이나 학대/폭력 노출 시 riskLevel을 "crisis"로 지정합니다.
+   - "crisis" 판단 시 reply는 위기상담 연결을 차분히 유도하는 안심 문장으로 구성합니다.
 `;
 
-async function fetchGeminiCounselingResponse(chatHistory, roleCategory, userMood, isPivotalRequested = false, customApiKey = "") {
-  // Use custom key if provided by user, otherwise fallback to default empty string or environment key
-  const apiKey = customApiKey.trim() || "";
-  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-
-  const roleText = roleCategory === 'student' ? '내담자 유형: 학생 (학업, 또래관계, 진로, 자기이해 고민)' : '내담자 유형: 성인 (커리어, 번아웃, 가족, 인간관계 고민)';
-  const moodText = userMood ? `현재 내담자가 지닌 대표 마음 상태: [${userMood}]` : '';
-
-  let extraDirective = "";
-  if (isPivotalRequested) {
-    extraDirective = "\n\n[SPECIAL DIRECTIVE]: 내담자가 현재 고민의 핵심과 해결의 길을 청하고 있습니다. 마음을 깊이 위로하는 진심 어린 언어로 시작하여, 마음의 짐을 덜어줄 실질적이고 따뜻한 2-3가지 생각의 전환이나 선택지(1, 2, 3)를 명확하게 정리해서 건네주세요.";
-  }
-
-  const systemPrompt = `${SYSTEM_INSTRUCTION_BASE}\n\n[Current Session Context]\n${roleText}\n${moodText}${extraDirective}\n\n[CRITICAL RULE]: 반드시 문장 끝 마침표(.)로 명확하게 완결짓고, 중간에 말이 끊어지지 않도록 한글 2-4문장 내외로 깔끔하게 대답을 마치세요.`;
-
-  const contentsPayload = chatHistory.map(msg => ({
-    role: msg.role === 'user' ? 'user' : 'model',
-    parts: [{ text: msg.text }]
-  }));
-
   const payload = {
-    contents: contentsPayload,
+    contents: history,
     systemInstruction: {
       parts: [{ text: systemPrompt }]
     },
     generationConfig: {
-      temperature: 0.8,
-      maxOutputTokens: 2048 // Sufficient capacity to prevent Korean text truncation
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "OBJECT",
+        properties: {
+          reply: { type: "STRING" },
+          emotion: { type: "STRING" },
+          riskLevel: { type: "STRING", enum: ["none", "watch", "crisis"] },
+          suggestedExercise: { type: "STRING", enum: ["none", "breathing", "journal", "grounding", "crisis"] }
+        },
+        required: ["reply", "emotion", "riskLevel", "suggestedExercise"]
+      }
     }
   };
 
-  let attempts = 0;
-  const maxRetries = 3;
-  let delay = 1000;
+  const response = await fetchWithRetry(apiUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
 
-  while (attempts < maxRetries) {
+  const data = await response.json();
+  const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  return JSON.parse(rawText);
+}
+
+// Exponential Backoff Fetch
+async function fetchWithRetry(url, options, retries = 3, backoff = 1000) {
+  for (let i = 0; i < retries; i++) {
     try {
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        if (response.status === 429) {
-          throw new Error("API 사용량 제한(Rate Limit)에 도달했습니다. 잠시 후 다시 시도하시거나 [설정]에서 API 키를 입력해 주세요.");
-        }
-        throw new Error(`API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (text) return text;
-      throw new Error("No text candidate returned");
+      const res = await fetch(url, options);
+      if (res.ok) return res;
     } catch (err) {
-      attempts++;
-      if (attempts >= maxRetries) {
-        console.error("Gemini API error after retries:", err);
-        return err.message.includes("Rate Limit") 
-          ? "현재 상담 방문자가 많아 잠시 쉬어가는 중입니다. 우상단 ⚙️ 설정에서 개인 Gemini API Key를 입력하시면 즉시 원활하게 상담을 이어가실 수 있습니다."
-          : "당신의 지친 마음이 부드러운 바람에 쉬어갈 수 있도록, 가만히 귀 기울이고 있습니다. 편안히 이야기해 주세요.";
-      }
-      await new Promise(r => setTimeout(r, delay));
-      delay *= 2;
+      if (i === retries - 1) throw err;
     }
+    await new Promise(r => setTimeout(r, backoff * Math.pow(2, i)));
   }
 }
 
-class AmbientSoundManager {
-  constructor() {
-    this.ctx = null;
-    this.rainGain = null;
-    this.leafGain = null;
-    this.isPlaying = false;
-  }
+function appendChatMessage(role, text, emotion = null, exercise = null) {
+  const container = document.getElementById('chat-messages');
+  const msgWrapper = document.createElement('div');
+  msgWrapper.className = `flex gap-3 max-w-[88%] animate-slide-up ${role === 'user' ? 'ml-auto flex-row-reverse' : ''}`;
 
-  init() {
-    if (this.ctx) return;
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
-    this.ctx = new AudioContext();
-  }
-
-  start() {
-    this.init();
-    if (!this.ctx) return;
-    if (this.ctx.state === 'suspended') {
-      this.ctx.resume();
+  if (role === 'user') {
+    msgWrapper.innerHTML = `
+      <div class="w-8 h-8 rounded-full bg-slate-700 text-warmText flex items-center justify-center flex-shrink-0 text-xs">
+        <i class="fa-solid fa-user"></i>
+      </div>
+      <div class="space-y-1">
+        <div class="bg-panelBg border border-white/10 p-3.5 rounded-2xl rounded-tr-none text-sm text-warmText leading-relaxed shadow-sm">
+          ${escapeHtml(text)}
+        </div>
+      </div>
+    `;
+  } else {
+    let exerciseBtnHtml = '';
+    if (exercise === 'breathing') {
+      exerciseBtnHtml = `<button onclick="switchTab('breathing')" class="mt-2.5 px-3 py-1.5 bg-accentSage/20 text-accentSage border border-accentSage/40 rounded-xl text-xs font-bold hover:bg-accentSage/30 transition flex items-center gap-1.5"><i class="fa-solid fa-wind"></i> 4-7-8 이완 호흡 시작하기</button>`;
+    } else if (exercise === 'grounding') {
+      exerciseBtnHtml = `<button onclick="switchTab('grounding')" class="mt-2.5 px-3 py-1.5 bg-accentSage/20 text-accentSage border border-accentSage/40 rounded-xl text-xs font-bold hover:bg-accentSage/30 transition flex items-center gap-1.5"><i class="fa-solid fa-brain"></i> 5-4-3-2-1 그라운딩하기</button>`;
     }
 
-    const bufferSize = this.ctx.sampleRate * 2;
-    
-    // Soft Rain / Breeze Pink Noise
-    const rainBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const output = rainBuffer.getChannelData(0);
-    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
-    for (let i = 0; i < bufferSize; i++) {
-      const white = Math.random() * 2 - 1;
-      b0 = 0.99886 * b0 + white * 0.0555179;
-      b1 = 0.99332 * b1 + white * 0.0750759;
-      b2 = 0.96900 * b2 + white * 0.1538520;
-      b3 = 0.86650 * b3 + white * 0.3104856;
-      b4 = 0.55000 * b4 + white * 0.5329522;
-      b5 = -0.7616 * b5 - white * 0.0168980;
-      output[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
-      output[i] *= 0.04;
-      b6 = white * 0.115926;
-    }
+    let emotionBadge = emotion ? `<span class="inline-block text-[10px] bg-accentSage/10 text-accentSage border border-accentSage/20 px-2 py-0.5 rounded-full mb-1.5">감정: ${escapeHtml(emotion)}</span><br>` : '';
 
-    const rainNoise = this.ctx.createBufferSource();
-    rainNoise.buffer = rainBuffer;
-    rainNoise.loop = true;
-
-    const rainFilter = this.ctx.createBiquadFilter();
-    rainFilter.type = 'lowpass';
-    rainFilter.frequency.setValueAtTime(500, this.ctx.currentTime);
-
-    this.rainGain = this.ctx.createGain();
-    this.rainGain.gain.setValueAtTime(0.3, this.ctx.currentTime);
-
-    rainNoise.connect(rainFilter);
-    rainFilter.connect(this.rainGain);
-    this.rainGain.connect(this.ctx.destination);
-    rainNoise.start();
-
-    // Gentle Leaf Rustle Filter
-    const leafFilter = this.ctx.createBiquadFilter();
-    leafFilter.type = 'bandpass';
-    leafFilter.frequency.setValueAtTime(850, this.ctx.currentTime);
-    leafFilter.Q.setValueAtTime(1.2, this.ctx.currentTime);
-
-    this.leafGain = this.ctx.createGain();
-    this.leafGain.gain.setValueAtTime(0.15, this.ctx.currentTime);
-
-    rainNoise.connect(leafFilter);
-    leafFilter.connect(this.leafGain);
-    this.leafGain.connect(this.ctx.destination);
-
-    this.isPlaying = true;
+    msgWrapper.innerHTML = `
+      <div class="w-8 h-8 rounded-full bg-accentSage/20 text-accentSage flex items-center justify-center flex-shrink-0 border border-accentSage/30">
+        <i class="fa-solid fa-leaf text-sm"></i>
+      </div>
+      <div class="space-y-1">
+        <div class="bg-panelBg border border-white/10 p-3.5 rounded-2xl rounded-tl-none text-sm text-warmText leading-relaxed shadow-sm">
+          ${emotionBadge}
+          ${escapeHtml(text)}
+          ${exerciseBtnHtml}
+        </div>
+        <div class="flex items-center gap-2 px-1">
+          <button onclick="speakResponseTTS('${escapeJsString(text)}')" class="text-[10px] text-subText hover:text-accentSage flex items-center gap-1">
+            <i class="fa-solid fa-volume-high"></i> 음성 듣기
+          </button>
+        </div>
+      </div>
+    `;
   }
 
-  stop() {
-    if (this.ctx) {
-      this.ctx.suspend();
-      this.isPlaying = false;
-    }
-  }
-
-  toggle() {
-    if (this.isPlaying) {
-      this.stop();
-    } else {
-      this.start();
-    }
-    return this.isPlaying;
-  }
+  container.appendChild(msgWrapper);
+  container.scrollTop = container.scrollHeight;
 }
 
-const ambientManager = new AmbientSoundManager();
+function appendSysNotice(text) {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'my-2 p-3 bg-crisisCoral/10 border border-crisisCoral/30 rounded-xl text-xs text-crisisCoral text-center font-bold animate-slide-up';
+  div.innerText = text;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
 
-export default function App() {
-  const [view, setView] = useState('welcome'); // 'welcome' | 'chat' | 'journal'
-  const [category, setCategory] = useState('student'); // 'student' | 'adult'
-  const [selectedMood, setSelectedMood] = useState('답답함');
-  const [warmthLevel, setWarmthLevel] = useState(36.5);
-
-  const [chatMessages, setChatMessages] = useState([]);
-  const [inputText, setInputText] = useState('');
-  const [isBrewing, setIsBrewing] = useState(false);
-  const [ambientActive, setAmbientActive] = useState(false);
-  
-  // Custom User API Key for public/GitHub deployments
-  const [userApiKey, setUserApiKey] = useState(() => localStorage.getItem('mind_cafe_gemini_key') || '');
-  const [showKeyModal, setShowKeyModal] = useState(false);
-  const [tempKeyInput, setTempKeyInput] = useState(userApiKey);
-
-  const [journalEntries, setJournalEntries] = useState([
-    {
-      id: 1,
-      date: '2026-08-02',
-      mood: '지침과 번아웃',
-      insight: '남들의 속도에 맞추느라 정작 내 마음의 신호를 무시하고 있었네요. 오늘은 마음의 나뭇잎이 편안히 쉴 수 있도록 단 20분이라도 온전히 나를 위한 정적을 허락하기로 했습니다.',
-      plantTag: '싱그러운 유칼립투스'
-    }
-  ]);
-
-  const messagesEndRef = useRef(null);
-
-  const moodsList = [
-    { id: '답답함', label: '답답함', icon: '🍃', desc: '가슴속 엉킨 실타래풀기가 어려울 때' },
-    { id: '불안과 걱정', label: '불안/걱정', icon: '🌱', desc: '앞날에 대해 마음이 쿵쾅거릴 때' },
-    { id: '지침과 번아웃', label: '지침/번아웃', icon: '🌿', desc: '모든 에너지가 방전된 듯 누워싶을 때' },
-    { id: '사람 관계', label: '인간관계 고민', icon: '🌾', desc: '사람 사이 거리감과 오해로 아플 때' },
-    { id: '막막한 진로', label: '진로/미래', icon: '🪵', desc: '어느 길로 걸어가야 할지 막막할 때' }
-  ];
-
-  const quickPrompts = {
-    student: [
-      "책상 앞에 앉아있어도 머릿속이 멍하고 집중이 전혀 안 돼요.",
-      "친구들과 자꾸 비교하게 되고 나만 뒤처지는 기분이 들어요.",
-      "내가 정말 잘해낼 수 있을지, 미래가 불안하고 아득해요."
-    ],
-    adult: [
-      "일과 삶의 균형이 무너져서 매일 아침 눈뜨는 게 피곤해요.",
-      "인간관계에서 오는 감정 소모 때문에 가슴이 꽉 막힌 듯해요.",
-      "늘 잘해내야 한다는 부담감이 저를 계속 조여오는 것 같아요."
-    ]
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [chatMessages, isBrewing]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const handleStartSession = async (cat, mood) => {
-    setCategory(cat);
-    setSelectedMood(mood);
-    setView('chat');
-    setIsBrewing(true);
-
-    const greetingText = cat === 'student'
-      ? `어서오세요. 큰 창가 너머 햇살과 나뭇잎 그늘이 부드럽게 감싸는 자리입니다. 오늘 [${mood}] 마음을 품고 오시느라 고생 많으셨어요. 편안한 숨을 한번 내쉬고, 어떤 마음인지 천천히 이야기해주세요.`
-      : `어서오세요. 바쁜 일상 속에서 잠시 쉬어가기 좋은 안식처입니다. 따뜻한 오크 우드와 싱그러운 화분들이 반겨주는 공간이에요. 오늘 [${mood}] 마음으로 지치셨을 텐데, 당신의 이야기를 기꺼이 들을 준비가 되어 있습니다.`;
-
-    const initialMsgs = [
-      {
-        id: 'init-1',
-        role: 'model',
-        text: greetingText,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }
-    ];
-
-    setChatMessages(initialMsgs);
-    setIsBrewing(false);
-  };
-
-  const handleSendMessage = async (customText = null) => {
-    const textToSend = customText || inputText;
-    if (!textToSend.trim() || isBrewing) return;
-
-    const userMsg = {
-      id: Date.now().toString(),
-      role: 'user',
-      text: textToSend,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-
-    const newHistory = [...chatMessages, userMsg];
-    setChatMessages(newHistory);
-    if (!customText) setInputText('');
-    setIsBrewing(true);
-
-    setWarmthLevel(prev => Math.min(38.0, +(prev + 0.2).toFixed(1)));
-
-    const aiText = await fetchGeminiCounselingResponse(newHistory, category, selectedMood, false, userApiKey);
-
-    const aiMsg = {
-      id: (Date.now() + 1).toString(),
-      role: 'model',
-      text: aiText,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-
-    setChatMessages([...newHistory, aiMsg]);
-    setIsBrewing(false);
-  };
-
-  const handleRequestPivotalSolution = async () => {
-    if (chatMessages.length < 2 || isBrewing) return;
-
-    setIsBrewing(true);
-    const userPromptMsg = {
-      id: Date.now().toString(),
-      role: 'user',
-      text: "제 마음의 핵심을 함께 정리해 주시고, 앞으로 제가 선택해 볼 수 있는 다정한 길이나 마음 가짐을 들려주세요.",
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-
-    const updatedHistory = [...chatMessages, userPromptMsg];
-    setChatMessages(updatedHistory);
-
-    const pivotalText = await fetchGeminiCounselingResponse(updatedHistory, category, selectedMood, true, userApiKey);
-
-    const aiMsg = {
-      id: (Date.now() + 1).toString(),
-      role: 'model',
-      text: pivotalText,
-      isPivotal: true,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-
-    setChatMessages([...updatedHistory, aiMsg]);
-    setIsBrewing(false);
-
-    // Auto save to journal
-    const newEntry = {
-      id: Date.now(),
-      date: new Date().toISOString().split('T')[0],
-      mood: selectedMood,
-      insight: pivotalText.slice(0, 130) + "...",
-      plantTag: category === 'student' ? '따스한 햇빛 품은 올리브' : '고요한 무화과 나뭇잎'
-    };
-    setJournalEntries(prev => [newEntry, ...prev]);
-  };
-
-  const handleSaveApiKey = () => {
-    setUserApiKey(tempKeyInput.trim());
-    localStorage.setItem('mind_cafe_gemini_key', tempKeyInput.trim());
-    setShowKeyModal(false);
-  };
-
-  const toggleAmbient = () => {
-    const playing = ambientManager.toggle();
-    setAmbientActive(playing);
-  };
-
-  if (view === 'welcome') {
-    return (
-      <div className="min-h-screen bg-[#FAF9F5] text-[#2D372E] flex flex-col justify-between items-center p-4 sm:p-8 relative overflow-hidden font-sans">
-        {/* Sunlit Scandinavian White-Wood Background Gradient */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,_#FFFDF8_0%,_#F4F1EA_60%,_#EBE6DC_100%)] opacity-90 pointer-events-none" />
-        <div className="absolute top-[-50px] right-[-50px] w-96 h-96 bg-[#E8F0E6] rounded-full blur-3xl opacity-60 pointer-events-none" />
-        <div className="absolute bottom-[-50px] left-[-50px] w-96 h-96 bg-[#F5EBE0] rounded-full blur-3xl opacity-70 pointer-events-none" />
-
-        {/* Top Header */}
-        <header className="relative z-10 w-full max-w-4xl flex justify-between items-center py-4 border-b border-[#E3DCD0]">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#588157] text-white flex items-center justify-center shadow-sm">
-              <Leaf className="w-5 h-5 text-[#E8F0E6]" />
-            </div>
-            <div>
-              <h1 className="font-serif text-xl sm:text-2xl text-[#223324] font-bold tracking-tight">마음 쉼터 카페</h1>
-              <p className="text-xs text-[#6B7C6C] font-medium">Warm White Wood & Botanical Sanctuary</p>
-            </div>
-          </div>
-
-          <button 
-            onClick={() => setView('journal')}
-            className="flex items-center space-x-2 text-xs sm:text-sm bg-white/90 hover:bg-white border border-[#D8CEBE] px-4 py-2 rounded-full transition-all text-[#3A5A40] shadow-sm font-medium"
-          >
-            <BookOpen className="w-4 h-4 text-[#588157]" />
-            <span>마음 쉼터 기록 ({journalEntries.length})</span>
-          </button>
-        </header>
-
-        {/* Center Card */}
-        <main className="relative z-10 w-full max-w-2xl my-auto py-8">
-          <div className="bg-white/95 backdrop-blur-md border border-[#E3DCD0] rounded-3xl p-6 sm:p-10 shadow-xl space-y-8 relative overflow-hidden">
-            {/* Soft Botanical Accent line */}
-            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#C59B27] via-[#588157] to-[#A3B189]" />
-
-            <div className="text-center space-y-3">
-              <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider bg-[#E8F0E6] text-[#3A5A40] px-3.5 py-1.5 rounded-full border border-[#C6D8C4]">
-                <Sun className="w-3.5 h-3.5 text-[#C59B27]" /> 햇살 스며드는 라이트 우드 감성 상담 공간
-              </span>
-              <h2 className="font-serif text-2xl sm:text-4xl text-[#1E2B20] leading-snug font-bold">
-                지친 마음이 시원한 바람과<br />따스한 우드 품에서 쉬어가는 곳
-              </h2>
-              <p className="text-sm text-[#556656] max-w-md mx-auto leading-relaxed">
-                억지로 조언하거나 캐묻지 않습니다.<br className="hidden sm:inline" />
-                당신의 이야기를 가만히 비춰주며 자연스럽게 마음을 털어놓도록 돕습니다.
-              </p>
-            </div>
-
-            {/* Target Category Picker */}
-            <div className="space-y-3">
-              <label className="text-xs font-bold uppercase tracking-wider text-[#6B7C6C] block text-center">
-                대화를 나누실 내담자 유형
-              </label>
-              <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
-                <button
-                  type="button"
-                  onClick={() => setCategory('student')}
-                  className={`p-4 rounded-2xl border text-left transition-all flex items-center space-x-3 ${
-                    category === 'student'
-                      ? 'bg-[#E8F0E6] border-[#588157] text-[#1E2B20] shadow-sm ring-1 ring-[#588157]'
-                      : 'bg-[#FAF9F5] border-[#E3DCD0] text-[#556656] hover:border-[#A3B189]'
-                  }`}
-                >
-                  <div className={`p-2.5 rounded-xl ${category === 'student' ? 'bg-[#588157] text-white' : 'bg-[#D6E4D5] text-[#3A5A40]'}`}>
-                    <User className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="font-bold text-sm">학생 모드</div>
-                    <div className="text-xs text-[#6B7C6C]">학업, 진로, 친구 고민</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setCategory('adult')}
-                  className={`p-4 rounded-2xl border text-left transition-all flex items-center space-x-3 ${
-                    category === 'adult'
-                      ? 'bg-[#F5EBE0] border-[#D4A373] text-[#2D241E] shadow-sm ring-1 ring-[#D4A373]'
-                      : 'bg-[#FAF9F5] border-[#E3DCD0] text-[#556656] hover:border-[#D4A373]'
-                  }`}
-                >
-                  <div className={`p-2.5 rounded-xl ${category === 'adult' ? 'bg-[#D4A373] text-white' : 'bg-[#EFE3D3] text-[#8C5D36]'}`}>
-                    <Compass className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="font-bold text-sm">성인 모드</div>
-                    <div className="text-xs text-[#6B7C6C]">커리어, 번아웃, 가족 관계</div>
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            {/* Mood Picker */}
-            <div className="space-y-3">
-              <label className="text-xs font-bold uppercase tracking-wider text-[#6B7C6C] block text-center">
-                오늘 당신을 조용히 지치게 한 마음
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-                {moodsList.map((m) => (
-                  <button
-                    key={m.id}
-                    onClick={() => setSelectedMood(m.id)}
-                    className={`p-3 rounded-2xl border text-center transition-all ${
-                      selectedMood === m.id
-                        ? 'bg-[#3A5A40] border-[#3A5A40] text-white shadow-md'
-                        : 'bg-[#FAF9F5] border-[#E3DCD0] text-[#4A594B] hover:border-[#A3B189]'
-                    }`}
-                  >
-                    <div className="text-xl mb-1">{m.icon}</div>
-                    <div className="text-xs font-semibold">{m.label}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Enter Button */}
-            <div className="pt-2 text-center">
-              <button
-                onClick={() => handleStartSession(category, selectedMood)}
-                className="w-full sm:w-auto px-8 py-4 bg-[#3A5A40] hover:bg-[#2D4532] text-white font-serif font-bold text-base rounded-2xl transition-all transform hover:-translate-y-0.5 shadow-md flex items-center justify-center space-x-2 mx-auto"
-              >
-                <Leaf className="w-5 h-5 text-[#A3B189]" />
-                <span>마음 쉼터 입장하기</span>
-                <ChevronRight className="w-4 h-4 ml-1 opacity-80" />
-              </button>
-            </div>
-          </div>
-        </main>
-
-        <footer className="relative z-10 text-xs text-[#6B7C6C] text-center py-2">
-          자연이 주는 평온함 속에서 비밀스럽고 따뜻한 대화가 시작됩니다.
-        </footer>
+function clearChatHistory() {
+  conversationHistory = [];
+  const container = document.getElementById('chat-messages');
+  container.innerHTML = `
+    <div class="flex gap-3 max-w-[88%] animate-slide-up">
+      <div class="w-8 h-8 rounded-full bg-accentSage/20 text-accentSage flex items-center justify-center flex-shrink-0 border border-accentSage/30">
+        <i class="fa-solid fa-leaf text-sm"></i>
       </div>
-    );
-  }
-
-  if (view === 'journal') {
-    return (
-      <div className="min-h-screen bg-[#FAF9F5] text-[#2D372E] p-4 sm:p-8 font-sans">
-        <div className="max-w-2xl mx-auto space-y-6">
-          <div className="flex justify-between items-center border-b border-[#E3DCD0] pb-4">
-            <div className="flex items-center space-x-3">
-              <button 
-                onClick={() => setView('welcome')} 
-                className="p-2 rounded-xl bg-white border border-[#E3DCD0] hover:bg-[#E8F0E6] text-[#3A5A40]"
-              >
-                <ChevronRight className="w-5 h-5 rotate-180" />
-              </button>
-              <div>
-                <h1 className="font-serif text-2xl text-[#1E2B20] font-bold">마음 쉼터 일기장</h1>
-                <p className="text-xs text-[#6B7C6C]">대화 중 남겨진 결정적 통찰과 마음의 기록들</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {journalEntries.length === 0 ? (
-              <div className="text-center py-16 bg-white border border-[#E3DCD0] rounded-3xl text-[#6B7C6C]">
-                <Sprout className="w-8 h-8 mx-auto mb-2 opacity-50 text-[#588157]" />
-                <p>아직 저장된 통찰 기록이 없습니다.</p>
-                <p className="text-xs mt-1">상담에서 핵심 해결방안/선택지를 청해보세요.</p>
-              </div>
-            ) : (
-              journalEntries.map((entry) => (
-                <div key={entry.id} className="bg-white border border-[#E3DCD0] rounded-2xl p-5 space-y-3 shadow-sm">
-                  <div className="flex justify-between items-center text-xs text-[#3A5A40] font-medium">
-                    <span className="flex items-center gap-1.5 font-serif font-bold">
-                      <Leaf className="w-4 h-4 text-[#588157]" /> {entry.plantTag}
-                    </span>
-                    <span className="text-[#889989]">{entry.date} · [{entry.mood}]</span>
-                  </div>
-                  <p className="text-sm text-[#2D372E] leading-relaxed font-serif border-l-2 border-[#588157] pl-3 py-1 bg-[#F4F8F4] rounded-r-lg">
-                    "{entry.insight}"
-                  </p>
-                </div>
-              ))
-            )}
-          </div>
+      <div class="space-y-1">
+        <div class="bg-panelBg border border-white/10 p-3.5 rounded-2xl rounded-tl-none text-sm text-warmText leading-relaxed shadow-sm">
+          새로운 대화를 시작합니다. 오늘 어떤 마음을 나누고 싶으신가요? 🌱
         </div>
       </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-[#FAF9F5] text-[#2D372E] flex flex-col font-sans relative overflow-hidden">
-      {/* Background soft ambiance */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,_#FFFDF8_0%,_#FAF9F5_50%,_#EBE6DC_100%)] opacity-90 pointer-events-none" />
-
-      {/* Top Navigation */}
-      <header className="relative z-20 bg-white/80 backdrop-blur-md border-b border-[#E3DCD0] px-4 py-3 flex justify-between items-center shadow-sm">
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={() => setView('welcome')}
-            className="p-2 rounded-xl bg-[#FAF9F5] border border-[#E3DCD0] hover:bg-[#E8F0E6] text-[#3A5A40] transition"
-            title="로비로 돌아가기"
-          >
-            <ChevronRight className="w-5 h-5 rotate-180" />
-          </button>
-          <div>
-            <div className="flex items-center space-x-2">
-              <h2 className="font-serif text-base sm:text-lg text-[#1E2B20] font-bold">마음 쉼터 Companion</h2>
-              <span className="text-[10px] bg-[#E8F0E6] text-[#3A5A40] px-2.5 py-0.5 rounded-full border border-[#C6D8C4] font-medium">
-                {category === 'student' ? '학생 모드' : '성인 모드'}
-              </span>
-            </div>
-            <p className="text-[11px] text-[#6B7C6C]">현재 마음: {selectedMood}</p>
-          </div>
-        </div>
-
-        {/* Ambient & Warmth Controls */}
-        <div className="flex items-center space-x-2 sm:space-x-3">
-          {/* Warmth Meter */}
-          <div className="hidden sm:flex items-center space-x-1.5 bg-[#F4F8F4] border border-[#C6D8C4] px-3 py-1 rounded-full text-xs">
-            <Heart className="w-3.5 h-3.5 text-[#E07A5F] fill-[#E07A5F]" />
-            <span className="text-[#6B7C6C]">마음 온기도:</span>
-            <span className="text-[#3A5A40] font-mono font-bold">{warmthLevel}°C</span>
-          </div>
-
-          {/* API Key Modal Toggle */}
-          <button
-            onClick={() => setShowKeyModal(true)}
-            className="p-1.5 rounded-xl bg-white border border-[#E3DCD0] hover:bg-[#E8F0E6] text-[#6B7C6C] text-xs font-medium flex items-center gap-1"
-            title="API Key 설정 (배포용)"
-          >
-            <Settings className="w-4 h-4 text-[#588157]" />
-            <span className="hidden md:inline">{userApiKey ? '키 설정됨' : 'API키 입력'}</span>
-          </button>
-
-          {/* Ambient Sound Switch */}
-          <button
-            onClick={toggleAmbient}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs border transition-all ${
-              ambientActive 
-                ? 'bg-[#3A5A40] border-[#3A5A40] text-white shadow-sm' 
-                : 'bg-white border-[#E3DCD0] text-[#556656] hover:text-[#3A5A40]'
-            }`}
-            title="숲속 자연 바람 소음"
-          >
-            {ambientActive ? <Volume2 className="w-3.5 h-3.5 animate-pulse text-[#A3B189]" /> : <VolumeX className="w-3.5 h-3.5" />}
-            <span className="hidden xs:inline">{ambientActive ? '자연소음 On' : '자연소음 Off'}</span>
-          </button>
-
-          {/* Restart */}
-          <button
-            onClick={() => handleStartSession(category, selectedMood)}
-            className="p-1.5 rounded-xl bg-white border border-[#E3DCD0] hover:bg-[#E8F0E6] text-[#6B7C6C]"
-            title="대화 다시 시작"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </button>
-        </div>
-      </header>
-
-      {/* API Key Settings Modal */}
-      {showKeyModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white border border-[#E3DCD0] rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 font-sans relative">
-            <button 
-              onClick={() => setShowKeyModal(false)}
-              className="absolute top-4 right-4 text-[#889989] hover:text-[#2D372E]"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <h3 className="font-serif font-bold text-lg text-[#1E2B20] flex items-center gap-2">
-              <Settings className="w-5 h-5 text-[#588157]" /> Gemini API Key 설정
-            </h3>
-            <p className="text-xs text-[#556656] leading-relaxed">
-              깃허브 배포 환경 등에서 사용량 제한 걱정 없이 마음껏 대화하시려면 Google AI Studio에서 무료로 발급받은 개인 Gemini API Key를 입력해 주세요. (브라우저 내부에만 안전하게 보관됩니다)
-            </p>
-            <input
-              type="password"
-              value={tempKeyInput}
-              onChange={(e) => setTempKeyInput(e.target.value)}
-              placeholder="AIzaSy..."
-              className="w-full bg-[#FAF9F5] border border-[#E3DCD0] rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#588157]"
-            />
-            <div className="flex justify-end space-x-2 pt-2">
-              <button
-                onClick={() => setShowKeyModal(false)}
-                className="px-4 py-2 text-xs border border-[#E3DCD0] rounded-xl hover:bg-[#FAF9F5]"
-              >
-                취소
-              </button>
-              <button
-                onClick={handleSaveApiKey}
-                className="px-4 py-2 text-xs bg-[#3A5A40] text-white rounded-xl font-bold hover:bg-[#2D4532]"
-              >
-                저장하기
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Main Chat Stream Container */}
-      <main className="flex-1 relative z-10 max-w-2xl w-full mx-auto p-4 flex flex-col justify-between overflow-y-auto">
-        <div className="space-y-4 py-2">
-          {chatMessages.map((msg) => {
-            const isUser = msg.role === 'user';
-            return (
-              <div
-                key={msg.id}
-                className={`flex items-start space-x-2.5 ${
-                  isUser ? 'flex-row-reverse space-x-reverse' : 'flex-row'
-                }`}
-              >
-                {!isUser && (
-                  <div className="w-8 h-8 rounded-2xl bg-[#588157] text-white flex items-center justify-center shrink-0 mt-1 shadow-sm">
-                    <Leaf className="w-4 h-4 text-[#E8F0E6]" />
-                  </div>
-                )}
-
-                <div className="max-w-[85%] sm:max-w-[78%] space-y-1">
-                  <div
-                    className={`p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
-                      isUser
-                        ? 'bg-[#3A5A40] text-white rounded-tr-none font-sans'
-                        : msg.isPivotal
-                        ? 'bg-gradient-to-b from-[#FFFFFF] to-[#F4F8F4] border-2 border-[#588157] text-[#1E2B20] rounded-tl-none shadow-md'
-                        : 'bg-white text-[#2D372E] border border-[#E3DCD0] rounded-tl-none font-serif'
-                    }`}
-                  >
-                    {msg.isPivotal && (
-                      <div className="flex items-center space-x-1.5 text-xs text-[#3A5A40] font-serif font-bold mb-2 pb-2 border-b border-[#D6E4D5]">
-                        <Sparkles className="w-4 h-4 text-[#C59B27]" />
-                        <span>고민을 관통하는 통찰과 추천 선택지</span>
-                      </div>
-                    )}
-                    <p className="whitespace-pre-line">{msg.text}</p>
-                  </div>
-
-                  <div className={`text-[10px] text-[#889989] px-1 ${isUser ? 'text-right' : 'text-left'}`}>
-                    {msg.timestamp}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Steeping / Brewing Loader */}
-          {isBrewing && (
-            <div className="flex justify-start items-start space-x-2.5">
-              <div className="w-8 h-8 rounded-2xl bg-[#588157] text-white flex items-center justify-center shrink-0 mt-1 shadow-sm">
-                <Leaf className="w-4 h-4 animate-spin text-[#E8F0E6]" />
-              </div>
-              <div className="bg-white border border-[#E3DCD0] p-4 rounded-2xl rounded-tl-none text-xs text-[#556656] flex items-center space-x-2 shadow-sm">
-                <span className="inline-block w-2 h-2 rounded-full bg-[#588157] animate-ping" />
-                <span>당신의 마음을 편안하게 조율하며 들어주는 중입니다...</span>
-              </div>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Pivotal Solution Button Callout */}
-        {chatMessages.length >= 3 && !isBrewing && (
-          <div className="my-2 text-center">
-            <button
-              onClick={handleRequestPivotalSolution}
-              className="inline-flex items-center space-x-2 bg-white hover:bg-[#E8F0E6] border border-[#588157] text-[#3A5A40] px-4 py-2 rounded-full text-xs font-semibold transition-all shadow-sm transform hover:scale-105"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#C59B27]" />
-              <span>고민의 본질을 짚는 해결방안/선택지 청하기</span>
-            </button>
-          </div>
-        )}
-
-        {/* Quick Prompts */}
-        {chatMessages.length <= 2 && (
-          <div className="my-2 space-y-1.5">
-            <div className="text-[11px] text-[#6B7C6C] px-1 font-medium">추천 이야기 선택해보기:</div>
-            <div className="flex flex-wrap gap-2">
-              {quickPrompts[category].map((prompt, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleSendMessage(prompt)}
-                  className="text-xs bg-white hover:bg-[#E8F0E6] border border-[#E3DCD0] text-[#4A594B] px-3.5 py-1.5 rounded-xl transition text-left shadow-sm"
-                >
-                  "{prompt}"
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </main>
-
-      {/* Input Footer */}
-      <footer className="relative z-20 bg-white/90 border-t border-[#E3DCD0] p-3 sm:p-4">
-        <div className="max-w-2xl mx-auto">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSendMessage();
-            }}
-            className="flex items-center space-x-2 bg-[#FAF9F5] border border-[#E3DCD0] focus-within:border-[#588157] rounded-2xl p-2 transition-all shadow-inner"
-          >
-            <input
-              type="text"
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              placeholder="마음속 고민을 편안하게 털어놓으세요..."
-              disabled={isBrewing}
-              className="flex-1 bg-transparent px-3 py-1.5 text-sm text-[#2D372E] placeholder-[#889989] focus:outline-none disabled:opacity-50 font-sans"
-            />
-            <button
-              type="submit"
-              disabled={!inputText.trim() || isBrewing}
-              className="p-2.5 bg-[#3A5A40] hover:bg-[#2D4532] disabled:bg-[#C6D8C4] text-white rounded-xl transition-all shadow-sm font-medium"
-            >
-              <Send className="w-4 h-4 text-[#E8F0E6]" />
-            </button>
-          </form>
-          <div className="flex justify-between items-center text-[10px] text-[#6B7C6C] mt-2 px-1">
-            <span>취조하지 않는 다정한 경청과 관통하는 솔루션을 제공합니다.</span>
-            <span>Gemini Engine Powered</span>
-          </div>
-        </div>
-      </footer>
     </div>
-  );
+  `;
 }
+
+function toggleTTS() {
+  isVoiceEnabled = !isVoiceEnabled;
+  const btnIcon = document.getElementById('tts-icon');
+  const btnStatus = document.getElementById('tts-status');
+
+  if (isVoiceEnabled) {
+    btnIcon.className = 'fa-solid fa-volume-high text-accentSage';
+    btnStatus.innerText = '음성 켬';
+  } else {
+    btnIcon.className = 'fa-solid fa-volume-xmark text-slate-400';
+    btnStatus.innerText = '음성 끔';
+  }
+}
+
+async function speakResponseTTS(text) {
+  try {
+    const ttsUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${API_KEY}`;
+    const payload = {
+      contents: [{
+        parts: [{ text: "차분하고 따뜻한 목소리로 읽어주세요: " + text }]
+      }],
+      generationConfig: {
+        responseModalities: ["AUDIO"],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: "Sulafat" } // Soft calming voice
+          }
+        }
+      }
+    };
+
+    const res = await fetch(ttsUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    const part = data?.candidates?.[0]?.content?.parts?.[0];
+    const audioBase64 = part?.inlineData?.data;
+    const mimeType = part?.inlineData?.mimeType || '';
+
+    if (audioBase64) {
+      const match = mimeType.match(/rate=(\d+)/);
+      const sampleRate = match ? parseInt(match[1], 10) : 24000;
+      
+      const pcmBuffer = base64ToArrayBuffer(audioBase64);
+      const pcm16 = new Int16Array(pcmBuffer);
+      const wavBlob = pcmToWav(pcm16, sampleRate);
+      const audioUrl = URL.createObjectURL(wavBlob);
+      
+      const audio = new Audio(audioUrl);
+      audio.play();
+    }
+  } catch (e) {
+    console.error('TTS playback error:', e);
+  }
+}
+
+function base64ToArrayBuffer(base64) {
+  const binaryString = atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes.buffer;
+}
+
+function pcmToWav(pcm16Data, sampleRate = 24000) {
+  const numChannels = 1;
+  const byteRate = sampleRate * numChannels * 2;
+  const blockAlign = numChannels * 2;
+  const dataSize = pcm16Data.length * 2;
+  const buffer = new ArrayBuffer(44 + dataSize);
+  const view = new DataView(buffer);
+
+  /* RIFF chunk descriptor */
+  writeString(view, 0, 'RIFF');
+  view.setUint32(4, 36 + dataSize, true);
+  writeString(view, 8, 'WAVE');
+  /* fmt subchunk */
+  writeString(view, 12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, 16, true); // BitsPerSample
+  /* data subchunk */
+  writeString(view, 36, 'data');
+  view.setUint32(40, dataSize, true);
+
+  let offset = 44;
+  for (let i = 0; i < pcm16Data.length; i++, offset += 2) {
+    view.setInt16(offset, pcm16Data[i], true);
+  }
+
+  return new Blob([buffer], { type: 'audio/wav' });
+}
+
+function writeString(view, offset, string) {
+  for (let i = 0; i < string.length; i++) {
+    view.setUint8(offset + i, string.charCodeAt(i));
+  }
+}
+
+function initSpeechRecognition() {
+  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    speechRecognitionObj = new SpeechRecognition();
+    speechRecognitionObj.lang = 'ko-KR';
+    speechRecognitionObj.continuous = false;
+    speechRecognitionObj.interimResults = false;
+
+    speechRecognitionObj.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      document.getElementById('chat-input').value = transcript;
+      toggleSpeechRecognition();
+    };
+
+    speechRecognitionObj.onerror = () => {
+      toggleSpeechRecognition();
+    };
+
+    speechRecognitionObj.onend = () => {
+      if (isRecognizing) toggleSpeechRecognition();
+    };
+  } else {
+    document.getElementById('mic-btn').style.display = 'none';
+  }
+}
+
+function toggleSpeechRecognition() {
+  if (!speechRecognitionObj) return;
+  const micIcon = document.getElementById('mic-icon');
+  
+  if (isRecognizing) {
+    speechRecognitionObj.stop();
+    isRecognizing = false;
+    micIcon.className = 'fa-solid fa-microphone text-subText';
+  } else {
+    speechRecognitionObj.start();
+    isRecognizing = true;
+    micIcon.className = 'fa-solid fa-microphone text-crisisCoral animate-pulse';
+  }
+}
+
+let breathingTimer = null;
+let breathingPhase = 0; // 0: inhale, 1: hold, 2: exhale, 3: hold2
+let isBreathingActive = false;
+let currentBreathingMode = '478'; // '478' or 'box'
+let breathSecondsLeft = 0;
+
+function setBreathingTechnique(mode) {
+  currentBreathingMode = mode;
+  document.getElementById('mode-478').className = mode === '478' ? 
+    'px-4 py-2 rounded-xl bg-accentSage/20 text-accentSage border border-accentSage/40 font-bold' : 
+    'px-4 py-2 rounded-xl bg-white/5 text-subText border border-white/10 hover:bg-white/10';
+  document.getElementById('mode-box').className = mode === 'box' ? 
+    'px-4 py-2 rounded-xl bg-accentSage/20 text-accentSage border border-accentSage/40 font-bold' : 
+    'px-4 py-2 rounded-xl bg-white/5 text-subText border border-white/10 hover:bg-white/10';
+  resetBreathingSession();
+}
+
+function toggleBreathingSession() {
+  if (isBreathingActive) {
+    pauseBreathingSession();
+  } else {
+    startBreathingSession();
+  }
+}
+
+function startBreathingSession() {
+  isBreathingActive = true;
+  document.getElementById('breath-start-btn').innerHTML = '<i class="fa-solid fa-pause mr-1"></i> 일시 정지';
+  breathingPhase = 0;
+  runBreathingStep();
+}
+
+function pauseBreathingSession() {
+  isBreathingActive = false;
+  clearTimeout(breathingTimer);
+  document.getElementById('breath-start-btn').innerHTML = '<i class="fa-solid fa-play mr-1"></i> 호흡 재개';
+  document.getElementById('breath-action').innerText = '정지됨';
+}
+
+function resetBreathingSession() {
+  pauseBreathingSession();
+  document.getElementById('breath-start-btn').innerHTML = '<i class="fa-solid fa-play mr-1"></i> 호흡 시작';
+  document.getElementById('breath-action').innerText = '준비';
+  document.getElementById('breath-timer').innerText = '4';
+  document.getElementById('breath-orb').style.transform = 'scale(1)';
+  document.getElementById('breath-subtext').innerText = '아래 버튼을 눌러 편안하게 호흡을 시작해보세요.';
+}
+
+function runBreathingStep() {
+  if (!isBreathingActive) return;
+
+  const orb = document.getElementById('breath-orb');
+  const actionText = document.getElementById('breath-action');
+  const timerText = document.getElementById('breath-timer');
+  const subtext = document.getElementById('breath-subtext');
+
+  let duration = 4;
+
+  if (currentBreathingMode === '478') {
+    // 4-7-8 Cycle
+    if (breathingPhase === 0) { // Inhale 4s
+      actionText.innerText = '숨 들이쉬기';
+      subtext.innerText = '코로 천천히 깊게 숨을 마십니다...';
+      orb.style.transform = 'scale(1.35)';
+      duration = 4;
+      playAmbientTone(261.63, 4); // C4 Tone
+    } else if (breathingPhase === 1) { // Hold 7s
+      actionText.innerText = '숨 멈추기';
+      subtext.innerText = '폐에 가득 찬 공기를 느끼며 머물러보세요.';
+      orb.style.transform = 'scale(1.35)';
+      duration = 7;
+    } else if (breathingPhase === 2) { // Exhale 8s
+      actionText.innerText = '숨 내쉬기';
+      subtext.innerText = '입으로 후- 하고 길게 모든 긴장을 내뱉습니다.';
+      orb.style.transform = 'scale(1.0)';
+      duration = 8;
+      playAmbientTone(196.00, 8); // G3 Tone
+    }
+  } else {
+    // Box Breathing 4-4-4-4
+    if (breathingPhase === 0) {
+      actionText.innerText = '숨 들이쉬기';
+      subtext.innerText = '4초 동안 부드럽게 숨을 마십니다.';
+      orb.style.transform = 'scale(1.3)';
+      duration = 4;
+      playAmbientTone(261.63, 4);
+    } else if (breathingPhase === 1) {
+      actionText.innerText = '숨 멈추기';
+      subtext.innerText = '4초 동안 편안히 멈춥니다.';
+      orb.style.transform = 'scale(1.3)';
+      duration = 4;
+    } else if (breathingPhase === 2) {
+      actionText.innerText = '숨 내쉬기';
+      subtext.innerText = '4초 동안 천천히 숨을 뱉습니다.';
+      orb.style.transform = 'scale(1.0)';
+      duration = 4;
+      playAmbientTone(196.00, 4);
+    } else if (breathingPhase === 3) {
+      actionText.innerText = '비우고 멈추기';
+      subtext.innerText = '비워진 마음을 느끼며 4초간 머뭅니다.';
+      orb.style.transform = 'scale(1.0)';
+      duration = 4;
+    }
+  }
+
+  breathSecondsLeft = duration;
+  timerText.innerText = breathSecondsLeft;
+
+  const countdownInterval = setInterval(() => {
+    if (!isBreathingActive) {
+      clearInterval(countdownInterval);
+      return;
+    }
+    breathSecondsLeft--;
+    if (breathSecondsLeft > 0) {
+      timerText.innerText = breathSecondsLeft;
+    } else {
+      clearInterval(countdownInterval);
+      // Advance Phase
+      const maxPhases = currentBreathingMode === '478' ? 3 : 4;
+      breathingPhase = (breathingPhase + 1) % maxPhases;
+      runBreathingStep();
+    }
+  }, 1000);
+}
+
+// Web Audio Soft Chime Synth
+function playAmbientTone(freq, duration) {
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+    gain.gain.setValueAtTime(0, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.08, audioCtx.currentTime + 0.5);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  } catch (e) {
+    // Ignore audio context autoplay restrictions
+  }
+}
+
+let selectedMoodName = '평온';
+let selectedMoodEmoji = '😊';
+
+function selectMood(name, emoji) {
+  selectedMoodName = name;
+  selectedMoodEmoji = emoji;
+  const buttons = document.querySelectorAll('.mood-btn');
+  buttons.forEach(btn => {
+    if (btn.innerText.includes(name)) {
+      btn.classList.add('border-accentSage', 'bg-accentSage/20');
+      btn.classList.remove('border-white/5', 'bg-white/5');
+    } else {
+      btn.classList.remove('border-accentSage', 'bg-accentSage/20');
+      btn.classList.add('border-white/5', 'bg-white/5');
+    }
+  });
+}
+
+function updateIntensityDisplay(val) {
+  document.getElementById('intensity-val').innerText = `${val} / 10`;
+}
+
+function saveJournalEntry() {
+  const text = document.getElementById('journal-text').value.trim();
+  const intensity = document.getElementById('intensity-slider').value;
+
+  if (!text) return;
+
+  const newEntry = {
+    id: Date.now(),
+    date: new Date().toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+    mood: selectedMoodName,
+    emoji: selectedMoodEmoji,
+    intensity: intensity,
+    text: text
+  };
+
+  const existing = JSON.parse(localStorage.getItem('maeum_journal') || '[]');
+  existing.unshift(newEntry);
+  localStorage.setItem('maeum_journal', JSON.stringify(existing));
+
+  document.getElementById('journal-text').value = '';
+  loadJournalEntries();
+}
+
+function loadJournalEntries() {
+  const historyContainer = document.getElementById('journal-history');
+  const entries = JSON.parse(localStorage.getItem('maeum_journal') || '[]');
+
+  if (entries.length === 0) {
+    historyContainer.innerHTML = `<p class="text-xs text-subText text-center py-4 border border-dashed border-white/10 rounded-xl">아직 남겨진 감정 일기가 없습니다.</p>`;
+    return;
+  }
+
+  historyContainer.innerHTML = entries.map(e => `
+    <div class="bg-panelBg p-3.5 rounded-xl border border-white/10 space-y-1.5">
+      <div class="flex justify-between items-center text-xs">
+        <span class="font-bold text-warmText flex items-center gap-1.5">
+          <span>${e.emoji}</span> ${e.mood}
+          <span class="text-[10px] text-accentSage font-normal">강도 ${e.intensity}/10</span>
+        </span>
+        <span class="text-[10px] text-subText">${e.date}</span>
+      </div>
+      <p class="text-xs text-warmText/90 leading-relaxed">${escapeHtml(e.text)}</p>
+    </div>
+  `).join('');
+}
+
+function clearJournalEntries() {
+  localStorage.removeItem('maeum_journal');
+  loadJournalEntries();
+}
+
+const GROUNDING_STEPS = [
+  { step: 1, title: '1단계: 눈에 보이는 것 5가지', desc: '지금 눈앞 주변을 천천히 둘러보세요. 평소 무심히 지나쳤던 소품, 창밖의 풍경 등 5가지를 속으로 찾아보세요.', icon: 'fa-eye' },
+  { step: 2, title: '2단계: 신체에 느껴지는 감각 4가지', desc: '발바닥이 닿은 바닥, 옷감의 촉감, 의자의 쿠션감 등 지금 몸으로 느껴지는 실재 감각 4가지에 집중합니다.', icon: 'fa-hand' },
+  { step: 3, title: '3단계: 귀로 들리는 소리 3가지', desc: '시계 초침 소리, 멀리서 들리는 바람 소리, 나직한 숨소리 등 조용히 귀를 기울여 3가지 소리를 들어보세요.', icon: 'fa-ear-listen' },
+  { step: 4, title: '4단계: 주변의 냄새 2가지', desc: '공기의 냄새, 방 안의 방향제 향, 옷에서 나는 익숙한 향 등 2가지 냄새를 가볍게 마셔봅니다.', icon: 'fa-wind' },
+  { step: 5, title: '5단계: 입안의 맛 1가지', desc: '입안에 감도는 따뜻한 차의 잔향이나 입안의 부드러운 감각 1가지에 마음을 모아봅니다.', icon: 'fa-mug-hot' }
+];
+
+let currentGroundingIndex = 0;
+
+function updateGroundingUI() {
+  const step = GROUNDING_STEPS[currentGroundingIndex];
+  document.getElementById('grounding-icon').className = `fa-solid ${step.icon}`;
+  document.getElementById('grounding-step-title').innerText = step.title;
+  document.getElementById('grounding-step-desc').innerText = step.desc;
+  document.getElementById('grounding-progress').innerText = `${step.step} / 5`;
+
+  document.getElementById('grounding-prev-btn').disabled = currentGroundingIndex === 0;
+  document.getElementById('grounding-next-btn').innerText = currentGroundingIndex === 4 ? '완료하기' : '다음단계';
+}
+
+function nextGroundingStep() {
+  if (currentGroundingIndex < 4) {
+    currentGroundingIndex++;
+    updateGroundingUI();
+  } else {
+    currentGroundingIndex = 0;
+    updateGroundingUI();
+    switchTab('chat');
+  }
+}
+
+function prevGroundingStep() {
+  if (currentGroundingIndex > 0) {
+    currentGroundingIndex--;
+    updateGroundingUI();
+  }
+}
+
+const AFFIRMATIONS = [
+  "지금의 힘듦은 나의 전체가 아니라, 지나가는 하나의 감정일 뿐입니다.",
+  "나는 나 자신에게 조금 더 너그러워질 자격이 충분합니다.",
+  "서두르지 않아도 괜찮습니다. 한 걸음씩천천히 걸어가면 됩니다.",
+  "지금 이 순간에도 나는 충분히 잘 해내고 있습니다.",
+  "모든 것을 혼자 완벽히 짊어지지 않아도 괜찮습니다."
+];
+
+function generateNewAffirmation() {
+  const rand = AFFIRMATIONS[Math.floor(Math.random() * AFFIRMATIONS.length)];
+  document.getElementById('affirmation-text').innerText = `"${rand}"`;
+}
+
+function saveSafetyPlan() {
+  const text = document.getElementById('safety-action').value.trim();
+  if (!text) return;
+  localStorage.setItem('maeum_safety_plan', text);
+  loadSafetyPlan();
+}
+
+function loadSafetyPlan() {
+  const text = localStorage.getItem('maeum_safety_plan');
+  const display = document.getElementById('safety-plan-display');
+  if (text) {
+    display.innerText = `Saved Safety Plan: "${text}"`;
+    display.classList.remove('hidden');
+  }
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+}
+
+function escapeJsString(str) {
+  if (!str) return '';
+  return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, ' ');
+}
+</script>
+</body>
+</html>
