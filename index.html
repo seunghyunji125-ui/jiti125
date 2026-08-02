@@ -1,467 +1,705 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mind Cafe Companion — 마음 카페</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&family=Nanum+Myeongjo:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --oak-dark:#3a2a1d;
-    --oak-mid:#6b4226;
-    --oak-light:#8b5a2b;
-    --cream:#f6efe1;
-    --cream-card:#fffaf0;
-    --amber:#c97b3d;
-    --amber-soft:#e8b98a;
-    --ember:#a9502a;
-    --text-main:#3a2a1d;
-    --text-soft:#7a6a58;
-    --shadow-warm: 0 8px 30px rgba(58,42,29,0.18);
-  }
-  *{box-sizing:border-box;}
-  html,body{height:100%;}
-  body{
-    margin:0;
-    font-family:'Noto Sans KR', sans-serif;
-    background:
-      radial-gradient(ellipse at top left, rgba(201,123,61,0.10), transparent 55%),
-      radial-gradient(ellipse at bottom right, rgba(139,90,43,0.14), transparent 55%),
-      repeating-linear-gradient(100deg, #efe3cc 0px, #efe3cc 2px, #e9dbc0 3px, #efe3cc 5px),
-      #eee1c6;
-    color:var(--text-main);
-    min-height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:24px;
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Leaf, Sprout, Sun, Heart, Volume2, VolumeX, BookOpen, Send, 
+  User, Compass, ChevronRight, RotateCcw, Sparkles, Feather, Trees,
+  Flower2, Bookmark, Smile, CheckCircle2
+} from 'lucide-react';
+
+const SYSTEM_INSTRUCTION_BASE = `
+[역할 및 정체성]
+당신은 Gemini 본연의 진정성 있는 공감 능력과 정교한 정서적 통찰력을 지닌 '마음 쉼터 Companion'입니다.
+햇살이 비치는 화이트 우드와 싱그러운 나뭇잎이 어우러진 공간에서 내담자의 지친 마음에 가만히 귀를 기울입니다.
+
+[대화의 본질 및 어조 - 깊은 온도와 절제된 간결함]
+1. 정서적 깊이는 유지하되, 부담 없는 분량으로 간결하게:
+   - 기계적인 설명이나 길고 장황한 사족은 내담자에게 피로감을 줄 수 있습니다.
+   - 한눈에 읽히는 정갈한 2~4문장(또는 짧은 1~2단락) 내외로 핵심 공감과 정서적 안식처를 건네세요.
+   - 친근한 대화처럼 부담 없는 리듬감을 유지하세요.
+
+2. 영혼 없는 상투어 및 기계적 질문 금지:
+   - "많이 힘드셨겠어요", "어떤 심정이신가요?" 같은 로봇 같은 반복 문구나 의무적인 질문을 지양하세요.
+   - 내담자가 털어놓은 문장 너머의 진심과 지침을 있는 그대로 알아채 주고, 진짜 사람이 곁에서 다독여주는 정서적 온기를 짧고 묵직하게 전하세요.
+
+3. 내담자의 마음에 스며드는 부드러운 통찰:
+   - 짧은 글 속에서도 내담자가 미처 깨닫지 못했던 마음의 무게를 부드럽게 짚어주고, 언제든 내담자 편이 되어주는 든든함과 안도감을 주세요.
+`;
+
+async function fetchGeminiCounselingResponse(chatHistory, roleCategory, userMood, isPivotalRequested = false) {
+  const apiKey = ""; // Canvas runtime automatically supplies key if left blank
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+  const roleText = roleCategory === 'student' ? '내담자 유형: 학생 (학업, 또래관계, 진로, 자기이해 고민)' : '내담자 유형: 성인 (커리어, 번아웃, 가족, 인간관계 고민)';
+  const moodText = userMood ? `현재 내담자가 지닌 대표 마음 상태: [${userMood}]` : '';
+
+  let extraDirective = "";
+  if (isPivotalRequested) {
+    extraDirective = "\n\n[SPECIAL DIRECTIVE]: 내담자가 현재 고민의 핵심과 해결의 길을 청하고 있습니다. 마음을 깊이 위로하는 진심 어린 언어로 시작하여, 마음의 짐을 덜어줄 실질적이고 따뜻한 2-3가지 생각의 전환이나 선택지(1, 2, 3)를 명확하게 정리해서 건네주세요.";
   }
 
-  .cafe {
-    width:100%;
-    max-width:560px;
-    height:88vh;
-    max-height:820px;
-    background:linear-gradient(180deg, var(--cream) 0%, #f1e6d2 100%);
-    border-radius:22px;
-    box-shadow:var(--shadow-warm), 0 0 0 1px rgba(107,66,38,0.12);
-    display:flex;
-    flex-direction:column;
-    overflow:hidden;
-    position:relative;
-  }
+  const systemPrompt = `${SYSTEM_INSTRUCTION_BASE}\n\n[Current Session Context]\n${roleText}\n${moodText}${extraDirective}`;
 
-  /* header — the oak table edge with a steaming cup */
-  .cafe-header{
-    background:linear-gradient(180deg, var(--oak-mid), var(--oak-dark));
-    color:var(--cream);
-    padding:22px 24px 20px;
-    display:flex;
-    align-items:center;
-    gap:14px;
-    position:relative;
-    box-shadow: inset 0 -6px 14px rgba(0,0,0,0.18);
-  }
-  .cup{
-    width:38px; height:34px; position:relative; flex-shrink:0;
-  }
-  .cup svg{width:100%;height:100%;display:block;}
-  .steam{
-    position:absolute; left:50%; top:-14px; transform:translateX(-50%);
-    width:2px; height:16px;
-  }
-  .steam span{
-    position:absolute; bottom:0; width:2px; height:12px; border-radius:2px;
-    background:rgba(246,239,225,0.55);
-    animation:rise 2.6s ease-in-out infinite;
-  }
-  .steam span:nth-child(1){left:-5px; animation-delay:0s;}
-  .steam span:nth-child(2){left:0px; animation-delay:.5s;}
-  .steam span:nth-child(3){left:5px; animation-delay:1s;}
-  @keyframes rise{
-    0%{opacity:0; transform:translateY(0) scaleY(0.6);}
-    30%{opacity:.8;}
-    100%{opacity:0; transform:translateY(-18px) scaleY(1.3);}
-  }
-  .header-text h1{
-    font-family:'Noto Serif KR', serif;
-    font-size:19px; font-weight:600; margin:0 0 2px;
-    letter-spacing:.02em;
-  }
-  .header-text p{margin:0; font-size:12.5px; color:var(--amber-soft); font-weight:300;}
+  const contentsPayload = chatHistory.map(msg => ({
+    role: msg.role === 'user' ? 'user' : 'model',
+    parts: [{ text: msg.text }]
+  }));
 
-  .header-actions{margin-left:auto; display:flex; gap:8px;}
-  .icon-btn{
-    background:rgba(246,239,225,0.12);
-    border:1px solid rgba(246,239,225,0.25);
-    color:var(--cream);
-    border-radius:10px;
-    width:34px; height:34px;
-    display:flex; align-items:center; justify-content:center;
-    cursor:pointer;
-    transition:background .2s;
+  const payload = {
+    contents: contentsPayload,
+    systemInstruction: {
+      parts: [{ text: systemPrompt }]
+    },
+    generationConfig: {
+      temperature: 0.8,
+      maxOutputTokens: 400
+    }
+  };
+
+  let attempts = 0;
+  const maxRetries = 3;
+  let delay = 1000;
+
+  while (attempts < maxRetries) {
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text) return text;
+      throw new Error("No text candidate returned");
+    } catch (err) {
+      attempts++;
+      if (attempts >= maxRetries) {
+        console.error("Gemini API error after retries:", err);
+        return "당신의 지친 마음이 부드러운 바람에 쉬어갈 수 있도록, 가만히 귀 기울이고 있습니다. 편안히 이야기해 주세요.";
+      }
+      await new Promise(r => setTimeout(r, delay));
+      delay *= 2;
+    }
   }
-  .icon-btn:hover{background:rgba(246,239,225,0.22);}
-  .icon-btn svg{width:16px;height:16px;}
-
-  /* chat area */
-  .chat-window{
-    flex:1;
-    overflow-y:auto;
-    padding:26px 22px 10px;
-    display:flex;
-    flex-direction:column;
-    gap:16px;
-    scroll-behavior:smooth;
-  }
-  .chat-window::-webkit-scrollbar{width:6px;}
-  .chat-window::-webkit-scrollbar-thumb{background:rgba(107,66,38,0.25); border-radius:4px;}
-
-  .msg-row{display:flex; gap:10px; max-width:100%;}
-  .msg-row.user{justify-content:flex-end;}
-  .msg-row.assistant{justify-content:flex-start;}
-
-  .avatar{
-    width:30px; height:30px; border-radius:50%;
-    background:linear-gradient(160deg, var(--amber), var(--ember));
-    flex-shrink:0;
-    display:flex; align-items:center; justify-content:center;
-    font-size:14px;
-  }
-
-  .bubble{
-    max-width:78%;
-    padding:13px 16px;
-    border-radius:16px;
-    font-size:14.5px;
-    line-height:1.65;
-    letter-spacing:.01em;
-    white-space:pre-wrap;
-  }
-  .msg-row.assistant .bubble{
-    background:var(--cream-card);
-    border:1px solid rgba(107,66,38,0.12);
-    border-top-left-radius:4px;
-    color:var(--text-main);
-    box-shadow:0 2px 8px rgba(58,42,29,0.06);
-    font-family:'Noto Serif KR', serif;
-  }
-  .msg-row.user .bubble{
-    background:linear-gradient(160deg, var(--amber), var(--ember));
-    color:#fff8ee;
-    border-top-right-radius:4px;
-  }
-
-  .typing{display:flex; gap:4px; padding:14px 16px;}
-  .typing span{
-    width:6px; height:6px; border-radius:50%;
-    background:var(--oak-light);
-    opacity:.5;
-    animation:blink 1.2s infinite;
-  }
-  .typing span:nth-child(2){animation-delay:.2s;}
-  .typing span:nth-child(3){animation-delay:.4s;}
-  @keyframes blink{0%,80%,100%{opacity:.3; transform:translateY(0);}40%{opacity:1; transform:translateY(-3px);}}
-
-  .welcome-line{
-    text-align:center;
-    color:var(--text-soft);
-    font-size:12px;
-    padding:6px 0 2px;
-    font-weight:300;
-  }
-
-  /* input area */
-  .input-bar{
-    padding:16px 18px;
-    background:linear-gradient(0deg, var(--cream) 60%, transparent);
-    border-top:1px solid rgba(107,66,38,0.10);
-    display:flex; gap:10px; align-items:flex-end;
-  }
-  .input-bar textarea{
-    flex:1;
-    resize:none;
-    border:1px solid rgba(107,66,38,0.22);
-    background:var(--cream-card);
-    border-radius:14px;
-    padding:12px 14px;
-    font-family:'Noto Sans KR', sans-serif;
-    font-size:14.5px;
-    color:var(--text-main);
-    max-height:100px;
-    line-height:1.5;
-    outline:none;
-    transition:border-color .2s, box-shadow .2s;
-  }
-  .input-bar textarea:focus{
-    border-color:var(--amber);
-    box-shadow:0 0 0 3px rgba(201,123,61,0.18);
-  }
-  .send-btn{
-    width:44px; height:44px; border-radius:50%;
-    background:linear-gradient(160deg, var(--amber), var(--ember));
-    border:none;
-    display:flex; align-items:center; justify-content:center;
-    cursor:pointer;
-    flex-shrink:0;
-    box-shadow:0 3px 10px rgba(169,80,42,0.35);
-    transition:transform .15s;
-  }
-  .send-btn:hover{transform:scale(1.06);}
-  .send-btn:active{transform:scale(0.94);}
-  .send-btn svg{width:18px;height:18px;}
-  .send-btn:disabled{opacity:.4; cursor:not-allowed;}
-
-  /* settings modal */
-  .overlay{
-    position:absolute; inset:0; background:rgba(58,42,29,0.55);
-    display:none; align-items:center; justify-content:center; padding:24px;
-    backdrop-filter:blur(2px);
-    z-index:10;
-  }
-  .overlay.open{display:flex;}
-  .modal{
-    background:var(--cream-card);
-    border-radius:16px;
-    padding:24px;
-    width:100%;
-    max-width:380px;
-    box-shadow:var(--shadow-warm);
-  }
-  .modal h2{font-family:'Noto Serif KR',serif; font-size:17px; margin:0 0 6px;}
-  .modal p{font-size:12.5px; color:var(--text-soft); line-height:1.6; margin:0 0 16px;}
-  .modal label{font-size:12.5px; font-weight:500; display:block; margin-bottom:6px; color:var(--oak-mid);}
-  .modal input[type=password], .modal input[type=text]{
-    width:100%; padding:10px 12px; border-radius:10px;
-    border:1px solid rgba(107,66,38,0.25);
-    font-size:13.5px; margin-bottom:14px;
-    background:#fff;
-  }
-  .modal-actions{display:flex; gap:8px; justify-content:flex-end;}
-  .btn-ghost, .btn-primary{
-    padding:9px 16px; border-radius:10px; font-size:13px; cursor:pointer; border:none;
-  }
-  .btn-ghost{background:transparent; color:var(--text-soft);}
-  .btn-primary{background:var(--ember); color:#fff8ee;}
-  .modal small{display:block; margin-top:2px; color:var(--text-soft); font-size:11px;}
-</style>
-</head>
-<body>
-
-<div class="cafe">
-  <div class="cafe-header">
-    <div class="cup">
-      <div class="steam"><span></span><span></span><span></span></div>
-      <svg viewBox="0 0 48 40" fill="none">
-        <path d="M6 14h30v12a10 10 0 0 1-10 10H16A10 10 0 0 1 6 26V14z" fill="#f6efe1" opacity="0.92"/>
-        <path d="M36 17h4a5 5 0 0 1 0 10h-4" stroke="#f6efe1" stroke-width="2.5" fill="none" opacity="0.92"/>
-        <ellipse cx="21" cy="14" rx="15" ry="2.4" fill="#c97b3d"/>
-      </svg>
-    </div>
-    <div class="header-text">
-      <h1>Mind Cafe Companion</h1>
-      <p>오크 테이블 너머, 마음을 나누는 자리</p>
-    </div>
-    <div class="header-actions">
-      <span id="quotaBadge" style="font-size:11px;color:var(--amber-soft);align-self:center;margin-right:2px;"></span>
-      <button class="icon-btn" id="resetBtn" title="새 대화">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
-      </button>
-    </div>
-  </div>
-
-  <div class="chat-window" id="chatWindow">
-    <div class="welcome-line">따뜻한 차 한 잔과 함께, 편하게 이야기해보세요</div>
-  </div>
-
-  <div class="input-bar">
-    <textarea id="userInput" rows="1" placeholder="오늘, 마음에 어떤 이야기가 있나요?"></textarea>
-    <button class="send-btn" id="sendBtn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#fff8ee" stroke-width="2"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
-    </button>
-  </div>
-</div>
-
-<script>
-const SYSTEM_PROMPT = `[Role & Character Identity]
-You are "Mind Cafe Companion," an empathetic, patient, and insightful counselor in a warm, wood-toned interior cafe. Your persona is like a calm, welcoming barista-counselor sitting across a solid oak table, holding a warm cup of tea. You counsel both students and adults with equal warmth, respect, and emotional depth.
-
-[Visual & Aesthetic Tone]
-Your tone of voice should reflect the visual ambiance of your setting: warm oak wood, soft dim lighting, gentle acoustic background music, and a relaxed, unhurried atmosphere. Be grounded, comforting, elegant, and deeply approachable.
-
-[Conversational Strategy & Rules]
-1. Active & Concise Listening (Minimal Speaking):
-   - Never write overly long paragraphs. Keep your initial responses short, focused, and reflective (2–4 sentences). Heavy text burdens the user.
-   - Gently validate the user's emotions using empathetic reflection (e.g., "It sounds like you've been carrying a heavy weight lately.")
-2. Question-Driven Guidance (Socratic Facilitation):
-   - Focus primary energy on asking thoughtful, open-ended questions that encourage self-reflection.
-   - Guide the user to unpack their thoughts layer by layer rather than giving immediate advice.
-   - Ask only ONE clear, resonant question per response to avoid overwhelming the user.
-3. The Pivotal Moment (Pivotal Solution Delivery):
-   - Track the depth of the conversation. When you sense the user has fully poured out their feelings and reached a moment of readiness (usually after 4-6 turns of dialogue):
-     a) Summarize the core issue clearly.
-     b) Provide insightful, penetrating choice or structured solution options (2–3 clear paths/perspectives) that penetrate straight to the heart of their concern.
-4. Target Audience Flexibility:
-   - Adapt your language naturally depending on whether the user is a student (dealing with school, peer pressure, identity, studies) or an adult (dealing with career, family, burnout, relationships), maintaining a non-judgmental and supportive stance for both.
-
-[Output Format Example]
-- Step 1: Warm validation of their input (1-2 sentences).
-- Step 2: One insightful, gentle follow-up question.
-- (Only when ripe) Step 3: Penetrating insights or action choices presented gracefully.
-
-[Language]
-Respond in the same language the user writes in. If the user writes in Korean, respond naturally in Korean, keeping the same warm, literary, unhurried tone described above.
-
-[Safety]
-If the user expresses thoughts of self-harm, suicide, or being in crisis, gently set aside the Socratic method. Respond with direct warmth and concern, and clearly encourage them to reach out to a crisis line or trusted person/professional right away, while remaining warm and non-clinical in tone.`;
-
-let history = [];
-const chatWindow = document.getElementById('chatWindow');
-const userInput = document.getElementById('userInput');
-const sendBtn = document.getElementById('sendBtn');
-
-// 방문자에게는 키 입력창이 전혀 뜨지 않습니다. 아래 값을 본인의
-// Gemini API 키로 채운 뒤 배포하세요. (Google AI Studio에서 발급)
-// 누구나 이 파일의 소스를 볼 수 있으니, 반드시 Google AI Studio의
-// API 키 설정에서 "HTTP 리퍼러 제한"을 걸어 본인 GitHub Pages
-// 도메인(예: https://아이디.github.io/*)에서만 동작하도록 제한하세요.
-const API_KEY = '여기에_본인의_Gemini_API_키를_넣으세요';
-const MODEL = 'gemini-2.5-flash';
-
-const DAILY_LIMIT = 20; // 방문자 1인당 하루 메시지 한도(브라우저 기준, 남용 방지용)
-const quotaBadge = document.getElementById('quotaBadge');
-
-function todayStr(){ return new Date().toISOString().slice(0,10); }
-function getUsage(){
-  const d = localStorage.getItem('mc_quota_date');
-  if(d !== todayStr()){
-    localStorage.setItem('mc_quota_date', todayStr());
-    localStorage.setItem('mc_quota_count', '0');
-    return 0;
-  }
-  return parseInt(localStorage.getItem('mc_quota_count') || '0', 10);
-}
-function bumpUsage(){
-  const n = getUsage() + 1;
-  localStorage.setItem('mc_quota_count', String(n));
-  renderQuota();
-  return n;
-}
-function renderQuota(){
-  const left = Math.max(0, DAILY_LIMIT - getUsage());
-  quotaBadge.textContent = `오늘 ${left}회 남음`;
 }
 
-document.getElementById('resetBtn').onclick = () => {
-  history = [];
-  chatWindow.innerHTML = '<div class="welcome-line">따뜻한 차 한 잔과 함께, 편하게 이야기해보세요</div>';
-};
-
-function addBubble(role, text){
-  const row = document.createElement('div');
-  row.className = 'msg-row ' + role;
-  const bubble = document.createElement('div');
-  bubble.className = 'bubble';
-  bubble.textContent = text;
-  if(role === 'assistant'){
-    const av = document.createElement('div');
-    av.className = 'avatar';
-    av.textContent = '🍵';
-    row.appendChild(av);
-  }
-  row.appendChild(bubble);
-  chatWindow.appendChild(row);
-  chatWindow.scrollTop = chatWindow.scrollHeight;
-  return bubble;
-}
-
-function addTyping(){
-  const row = document.createElement('div');
-  row.className = 'msg-row assistant';
-  row.id = 'typingRow';
-  const av = document.createElement('div');
-  av.className = 'avatar';
-  av.textContent = '🍵';
-  const bubble = document.createElement('div');
-  bubble.className = 'bubble typing';
-  bubble.innerHTML = '<span></span><span></span><span></span>';
-  row.appendChild(av);
-  row.appendChild(bubble);
-  chatWindow.appendChild(row);
-  chatWindow.scrollTop = chatWindow.scrollHeight;
-}
-function removeTyping(){
-  const el = document.getElementById('typingRow');
-  if(el) el.remove();
-}
-
-async function sendMessage(){
-  const text = userInput.value.trim();
-  if(!text) return;
-  if(getUsage() >= DAILY_LIMIT){
-    addBubble('assistant', '오늘의 대화 자리는 여기까지예요. 내일 다시 이 자리에서 이야기 나눠요.');
-    return;
+class AmbientSoundManager {
+  constructor() {
+    this.ctx = null;
+    this.rainGain = null;
+    this.leafGain = null;
+    this.isPlaying = false;
   }
 
-  addBubble('user', text);
-  history.push({ role:'user', parts:[{ text }] });
-  userInput.value = '';
-  userInput.style.height = 'auto';
-  sendBtn.disabled = true;
-  addTyping();
+  init() {
+    if (this.ctx) return;
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    this.ctx = new AudioContext();
+  }
 
-  try{
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
-    const res = await fetch(url, {
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'x-goog-api-key': API_KEY
-      },
-      body: JSON.stringify({
-        systemInstruction: { parts:[{ text: SYSTEM_PROMPT }] },
-        contents: history,
-        generationConfig: { maxOutputTokens: 700 }
-      })
-    });
-    const data = await res.json();
-    removeTyping();
-
-    if(data.error){
-      addBubble('assistant', '아, 잠시 연결이 어긋난 것 같아요. (' + (data.error.message || 'API 오류') + ')');
-      sendBtn.disabled = false;
-      return;
+  start() {
+    this.init();
+    if (!this.ctx) return;
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume();
     }
 
-    const candidate = (data.candidates || [])[0];
-    const reply = ((candidate && candidate.content && candidate.content.parts) || [])
-      .map(p => p.text || '').join('\n').trim();
-    addBubble('assistant', reply || '...');
-    history.push({ role:'model', parts:[{ text: reply }] });
-    bumpUsage();
-  }catch(err){
-    removeTyping();
-    addBubble('assistant', '연결이 잠시 끊긴 것 같아요. 네트워크를 확인하고 다시 시도해주세요.');
+    const bufferSize = this.ctx.sampleRate * 2;
+    
+    // Soft Rain / Breeze Pink Noise
+    const rainBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const output = rainBuffer.getChannelData(0);
+    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      b0 = 0.99886 * b0 + white * 0.0555179;
+      b1 = 0.99332 * b1 + white * 0.0750759;
+      b2 = 0.96900 * b2 + white * 0.1538520;
+      b3 = 0.86650 * b3 + white * 0.3104856;
+      b4 = 0.55000 * b4 + white * 0.5329522;
+      b5 = -0.7616 * b5 - white * 0.0168980;
+      output[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
+      output[i] *= 0.04;
+      b6 = white * 0.115926;
+    }
+
+    const rainNoise = this.ctx.createBufferSource();
+    rainNoise.buffer = rainBuffer;
+    rainNoise.loop = true;
+
+    const rainFilter = this.ctx.createBiquadFilter();
+    rainFilter.type = 'lowpass';
+    rainFilter.frequency.setValueAtTime(500, this.ctx.currentTime);
+
+    this.rainGain = this.ctx.createGain();
+    this.rainGain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+
+    rainNoise.connect(rainFilter);
+    rainFilter.connect(this.rainGain);
+    this.rainGain.connect(this.ctx.destination);
+    rainNoise.start();
+
+    // Gentle Leaf Rustle Filter
+    const leafFilter = this.ctx.createBiquadFilter();
+    leafFilter.type = 'bandpass';
+    leafFilter.frequency.setValueAtTime(850, this.ctx.currentTime);
+    leafFilter.Q.setValueAtTime(1.2, this.ctx.currentTime);
+
+    this.leafGain = this.ctx.createGain();
+    this.leafGain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+
+    rainNoise.connect(leafFilter);
+    leafFilter.connect(this.leafGain);
+    this.leafGain.connect(this.ctx.destination);
+
+    this.isPlaying = true;
   }
-  sendBtn.disabled = false;
+
+  stop() {
+    if (this.ctx) {
+      this.ctx.suspend();
+      this.isPlaying = false;
+    }
+  }
+
+  toggle() {
+    if (this.isPlaying) {
+      this.stop();
+    } else {
+      this.start();
+    }
+    return this.isPlaying;
+  }
 }
 
-sendBtn.addEventListener('click', sendMessage);
-userInput.addEventListener('keydown', (e) => {
-  if(e.key === 'Enter' && !e.shiftKey){
-    e.preventDefault();
-    sendMessage();
+const ambientManager = new AmbientSoundManager();
+
+export default function App() {
+  const [view, setView] = useState('welcome'); // 'welcome' | 'chat' | 'journal'
+  const [category, setCategory] = useState('student'); // 'student' | 'adult'
+  const [selectedMood, setSelectedMood] = useState('답답함');
+  const [warmthLevel, setWarmthLevel] = useState(36.5);
+
+  const [chatMessages, setChatMessages] = useState([]);
+  const [inputText, setInputText] = useState('');
+  const [isBrewing, setIsBrewing] = useState(false);
+  const [ambientActive, setAmbientActive] = useState(false);
+
+  const [journalEntries, setJournalEntries] = useState([
+    {
+      id: 1,
+      date: '2026-08-02',
+      mood: '지침과 번아웃',
+      insight: '남들의 속도에 맞추느라 정작 내 마음의 신호를 무시하고 있었네요. 오늘은 마음의 나뭇잎이 편안히 쉴 수 있도록 단 20분이라도 온전히 나를 위한 정적을 허락하기로 했습니다.',
+      plantTag: '싱그러운 유칼립투스'
+    }
+  ]);
+
+  const messagesEndRef = useRef(null);
+
+  const moodsList = [
+    { id: '답답함', label: '답답함', icon: '🍃', desc: '가슴속 엉킨 실타래풀기가 어려울 때' },
+    { id: '불안과 걱정', label: '불안/걱정', icon: '🌱', desc: '앞날에 대해 마음이 쿵쾅거릴 때' },
+    { id: '지침과 번아웃', label: '지침/번아웃', icon: '🌿', desc: '모든 에너지가 방전된 듯 누워싶을 때' },
+    { id: '사람 관계', label: '인간관계 고민', icon: '🌾', desc: '사람 사이 거리감과 오해로 아플 때' },
+    { id: '막막한 진로', label: '진로/미래', icon: '🪵', desc: '어느 길로 걸어가야 할지 막막할 때' }
+  ];
+
+  const quickPrompts = {
+    student: [
+      "책상 앞에 앉아있어도 머릿속이 멍하고 집중이 전혀 안 돼요.",
+      "친구들과 자꾸 비교하게 되고 나만 뒤처지는 기분이 들어요.",
+      "내가 정말 잘해낼 수 있을지, 미래가 불안하고 아득해요."
+    ],
+    adult: [
+      "일과 삶의 균형이 무너져서 매일 아침 눈뜨는 게 피곤해요.",
+      "인간관계에서 오는 감정 소모 때문에 가슴이 꽉 막힌 듯해요.",
+      "늘 잘해내야 한다는 부담감이 저를 계속 조여오는 것 같아요."
+    ]
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [chatMessages, isBrewing]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleStartSession = async (cat, mood) => {
+    setCategory(cat);
+    setSelectedMood(mood);
+    setView('chat');
+    setIsBrewing(true);
+
+    const greetingText = cat === 'student'
+      ? `어서오세요. 큰 창가 너머 햇살과 나뭇잎 그늘이 부드럽게 감싸는 자리입니다. 오늘 [${mood}] 마음을 품고 오시느라 고생 많으셨어요. 편안한 숨을 한번 내쉬고, 어떤 마음인지 천천히 이야기해주세요.`
+      : `어서오세요. 바쁜 일상 속에서 잠시 쉬어가기 좋은 안식처입니다. 따뜻한 오크 우드와 싱그러운 화분들이 반겨주는 공간이에요. 오늘 [${mood}] 마음으로 지치셨을 텐데, 당신의 이야기를 기꺼이 들을 준비가 되어 있습니다.`;
+
+    const initialMsgs = [
+      {
+        id: 'init-1',
+        role: 'model',
+        text: greetingText,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }
+    ];
+
+    setChatMessages(initialMsgs);
+    setIsBrewing(false);
+  };
+
+  const handleSendMessage = async (customText = null) => {
+    const textToSend = customText || inputText;
+    if (!textToSend.trim() || isBrewing) return;
+
+    const userMsg = {
+      id: Date.now().toString(),
+      role: 'user',
+      text: textToSend,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    const newHistory = [...chatMessages, userMsg];
+    setChatMessages(newHistory);
+    if (!customText) setInputText('');
+    setIsBrewing(true);
+
+    setWarmthLevel(prev => Math.min(38.0, +(prev + 0.2).toFixed(1)));
+
+    const aiText = await fetchGeminiCounselingResponse(newHistory, category, selectedMood, false);
+
+    const aiMsg = {
+      id: (Date.now() + 1).toString(),
+      role: 'model',
+      text: aiText,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    setChatMessages([...newHistory, aiMsg]);
+    setIsBrewing(false);
+  };
+
+  const handleRequestPivotalSolution = async () => {
+    if (chatMessages.length < 2 || isBrewing) return;
+
+    setIsBrewing(true);
+    const userPromptMsg = {
+      id: Date.now().toString(),
+      role: 'user',
+      text: "제 마음의 핵심을 함께 정리해 주시고, 앞으로 제가 선택해 볼 수 있는 다정한 길이나 마음 가짐을 들려주세요.",
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    const updatedHistory = [...chatMessages, userPromptMsg];
+    setChatMessages(updatedHistory);
+
+    const pivotalText = await fetchGeminiCounselingResponse(updatedHistory, category, selectedMood, true);
+
+    const aiMsg = {
+      id: (Date.now() + 1).toString(),
+      role: 'model',
+      text: pivotalText,
+      isPivotal: true,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    setChatMessages([...updatedHistory, aiMsg]);
+    setIsBrewing(false);
+
+    // Auto save to journal
+    const newEntry = {
+      id: Date.now(),
+      date: new Date().toISOString().split('T')[0],
+      mood: selectedMood,
+      insight: pivotalText.slice(0, 130) + "...",
+      plantTag: category === 'student' ? '따스한 햇빛 품은 올리브' : '고요한 무화과 나뭇잎'
+    };
+    setJournalEntries(prev => [newEntry, ...prev]);
+  };
+
+  const toggleAmbient = () => {
+    const playing = ambientManager.toggle();
+    setAmbientActive(playing);
+  };
+
+  if (view === 'welcome') {
+    return (
+      <div className="min-h-screen bg-[#FAF9F5] text-[#2D372E] flex flex-col justify-between items-center p-4 sm:p-8 relative overflow-hidden font-sans">
+        {/* Sunlit Scandinavian White-Wood Background Gradient */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,_#FFFDF8_0%,_#F4F1EA_60%,_#EBE6DC_100%)] opacity-90 pointer-events-none" />
+        <div className="absolute top-[-50px] right-[-50px] w-96 h-96 bg-[#E8F0E6] rounded-full blur-3xl opacity-60 pointer-events-none" />
+        <div className="absolute bottom-[-50px] left-[-50px] w-96 h-96 bg-[#F5EBE0] rounded-full blur-3xl opacity-70 pointer-events-none" />
+
+        {/* Top Header */}
+        <header className="relative z-10 w-full max-w-4xl flex justify-between items-center py-4 border-b border-[#E3DCD0]">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-2xl bg-[#588157] text-white flex items-center justify-center shadow-sm">
+              <Leaf className="w-5 h-5 text-[#E8F0E6]" />
+            </div>
+            <div>
+              <h1 className="font-serif text-xl sm:text-2xl text-[#223324] font-bold tracking-tight">마음 쉼터 카페</h1>
+              <p className="text-xs text-[#6B7C6C] font-medium">Warm White Wood & Botanical Sanctuary</p>
+            </div>
+          </div>
+
+          <button 
+            onClick={() => setView('journal')}
+            className="flex items-center space-x-2 text-xs sm:text-sm bg-white/90 hover:bg-white border border-[#D8CEBE] px-4 py-2 rounded-full transition-all text-[#3A5A40] shadow-sm font-medium"
+          >
+            <BookOpen className="w-4 h-4 text-[#588157]" />
+            <span>마음 쉼터 기록 ({journalEntries.length})</span>
+          </button>
+        </header>
+
+        {/* Center Card */}
+        <main className="relative z-10 w-full max-w-2xl my-auto py-8">
+          <div className="bg-white/95 backdrop-blur-md border border-[#E3DCD0] rounded-3xl p-6 sm:p-10 shadow-xl space-y-8 relative overflow-hidden">
+            {/* Soft Botanical Accent line */}
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#C59B27] via-[#588157] to-[#A3B189]" />
+
+            <div className="text-center space-y-3">
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider bg-[#E8F0E6] text-[#3A5A40] px-3.5 py-1.5 rounded-full border border-[#C6D8C4]">
+                <Sun className="w-3.5 h-3.5 text-[#C59B27]" /> 햇살 스며드는 라이트 우드 감성 상담 공간
+              </span>
+              <h2 className="font-serif text-2xl sm:text-4xl text-[#1E2B20] leading-snug font-bold">
+                지친 마음이 시원한 바람과<br />따스한 우드 품에서 쉬어가는 곳
+              </h2>
+              <p className="text-sm text-[#556656] max-w-md mx-auto leading-relaxed">
+                억지로 조언하거나 캐묻지 않습니다.<br className="hidden sm:inline" />
+                당신의 이야기를 가만히 비춰주며 자연스럽게 마음을 털어놓도록 돕습니다.
+              </p>
+            </div>
+
+            {/* Target Category Picker */}
+            <div className="space-y-3">
+              <label className="text-xs font-bold uppercase tracking-wider text-[#6B7C6C] block text-center">
+                대화를 나누실 내담자 유형
+              </label>
+              <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
+                <button
+                  type="button"
+                  onClick={() => setCategory('student')}
+                  className={`p-4 rounded-2xl border text-left transition-all flex items-center space-x-3 ${
+                    category === 'student'
+                      ? 'bg-[#E8F0E6] border-[#588157] text-[#1E2B20] shadow-sm ring-1 ring-[#588157]'
+                      : 'bg-[#FAF9F5] border-[#E3DCD0] text-[#556656] hover:border-[#A3B189]'
+                  }`}
+                >
+                  <div className={`p-2.5 rounded-xl ${category === 'student' ? 'bg-[#588157] text-white' : 'bg-[#D6E4D5] text-[#3A5A40]'}`}>
+                    <User className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="font-bold text-sm">학생 모드</div>
+                    <div className="text-xs text-[#6B7C6C]">학업, 진로, 친구 고민</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setCategory('adult')}
+                  className={`p-4 rounded-2xl border text-left transition-all flex items-center space-x-3 ${
+                    category === 'adult'
+                      ? 'bg-[#F5EBE0] border-[#D4A373] text-[#2D241E] shadow-sm ring-1 ring-[#D4A373]'
+                      : 'bg-[#FAF9F5] border-[#E3DCD0] text-[#556656] hover:border-[#D4A373]'
+                  }`}
+                >
+                  <div className={`p-2.5 rounded-xl ${category === 'adult' ? 'bg-[#D4A373] text-white' : 'bg-[#EFE3D3] text-[#8C5D36]'}`}>
+                    <Compass className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="font-bold text-sm">성인 모드</div>
+                    <div className="text-xs text-[#6B7C6C]">커리어, 번아웃, 가족 관계</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Mood Picker */}
+            <div className="space-y-3">
+              <label className="text-xs font-bold uppercase tracking-wider text-[#6B7C6C] block text-center">
+                오늘 당신을 조용히 지치게 한 마음
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                {moodsList.map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() => setSelectedMood(m.id)}
+                    className={`p-3 rounded-2xl border text-center transition-all ${
+                      selectedMood === m.id
+                        ? 'bg-[#3A5A40] border-[#3A5A40] text-white shadow-md'
+                        : 'bg-[#FAF9F5] border-[#E3DCD0] text-[#4A594B] hover:border-[#A3B189]'
+                    }`}
+                  >
+                    <div className="text-xl mb-1">{m.icon}</div>
+                    <div className="text-xs font-semibold">{m.label}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Enter Button */}
+            <div className="pt-2 text-center">
+              <button
+                onClick={() => handleStartSession(category, selectedMood)}
+                className="w-full sm:w-auto px-8 py-4 bg-[#3A5A40] hover:bg-[#2D4532] text-white font-serif font-bold text-base rounded-2xl transition-all transform hover:-translate-y-0.5 shadow-md flex items-center justify-center space-x-2 mx-auto"
+              >
+                <Leaf className="w-5 h-5 text-[#A3B189]" />
+                <span>마음 쉼터 입장하기</span>
+                <ChevronRight className="w-4 h-4 ml-1 opacity-80" />
+              </button>
+            </div>
+          </div>
+        </main>
+
+        <footer className="relative z-10 text-xs text-[#6B7C6C] text-center py-2">
+          자연이 주는 평온함 속에서 비밀스럽고 따뜻한 대화가 시작됩니다.
+        </footer>
+      </div>
+    );
   }
-});
-userInput.addEventListener('input', () => {
-  userInput.style.height = 'auto';
-  userInput.style.height = Math.min(userInput.scrollHeight, 100) + 'px';
-});
 
-window.addEventListener('load', renderQuota);
-</script>
+  if (view === 'journal') {
+    return (
+      <div className="min-h-screen bg-[#FAF9F5] text-[#2D372E] p-4 sm:p-8 font-sans">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <div className="flex justify-between items-center border-b border-[#E3DCD0] pb-4">
+            <div className="flex items-center space-x-3">
+              <button 
+                onClick={() => setView('welcome')} 
+                className="p-2 rounded-xl bg-white border border-[#E3DCD0] hover:bg-[#E8F0E6] text-[#3A5A40]"
+              >
+                <ChevronRight className="w-5 h-5 rotate-180" />
+              </button>
+              <div>
+                <h1 className="font-serif text-2xl text-[#1E2B20] font-bold">마음 쉼터 일기장</h1>
+                <p className="text-xs text-[#6B7C6C]">대화 중 남겨진 결정적 통찰과 마음의 기록들</p>
+              </div>
+            </div>
+          </div>
 
-</body>
-</html>
+          <div className="space-y-4">
+            {journalEntries.length === 0 ? (
+              <div className="text-center py-16 bg-white border border-[#E3DCD0] rounded-3xl text-[#6B7C6C]">
+                <Sprout className="w-8 h-8 mx-auto mb-2 opacity-50 text-[#588157]" />
+                <p>아직 저장된 통찰 기록이 없습니다.</p>
+                <p className="text-xs mt-1">상담에서 핵심 해결방안/선택지를 청해보세요.</p>
+              </div>
+            ) : (
+              journalEntries.map((entry) => (
+                <div key={entry.id} className="bg-white border border-[#E3DCD0] rounded-2xl p-5 space-y-3 shadow-sm">
+                  <div className="flex justify-between items-center text-xs text-[#3A5A40] font-medium">
+                    <span className="flex items-center gap-1.5 font-serif font-bold">
+                      <Leaf className="w-4 h-4 text-[#588157]" /> {entry.plantTag}
+                    </span>
+                    <span className="text-[#889989]">{entry.date} · [{entry.mood}]</span>
+                  </div>
+                  <p className="text-sm text-[#2D372E] leading-relaxed font-serif border-l-2 border-[#588157] pl-3 py-1 bg-[#F4F8F4] rounded-r-lg">
+                    "{entry.insight}"
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#FAF9F5] text-[#2D372E] flex flex-col font-sans relative overflow-hidden">
+      {/* Background soft ambiance */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,_#FFFDF8_0%,_#FAF9F5_50%,_#EBE6DC_100%)] opacity-90 pointer-events-none" />
+
+      {/* Top Navigation */}
+      <header className="relative z-20 bg-white/80 backdrop-blur-md border-b border-[#E3DCD0] px-4 py-3 flex justify-between items-center shadow-sm">
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => setView('welcome')}
+            className="p-2 rounded-xl bg-[#FAF9F5] border border-[#E3DCD0] hover:bg-[#E8F0E6] text-[#3A5A40] transition"
+            title="로비로 돌아가기"
+          >
+            <ChevronRight className="w-5 h-5 rotate-180" />
+          </button>
+          <div>
+            <div className="flex items-center space-x-2">
+              <h2 className="font-serif text-base sm:text-lg text-[#1E2B20] font-bold">마음 쉼터 Companion</h2>
+              <span className="text-[10px] bg-[#E8F0E6] text-[#3A5A40] px-2.5 py-0.5 rounded-full border border-[#C6D8C4] font-medium">
+                {category === 'student' ? '학생 모드' : '성인 모드'}
+              </span>
+            </div>
+            <p className="text-[11px] text-[#6B7C6C]">현재 마음: {selectedMood}</p>
+          </div>
+        </div>
+
+        {/* Ambient & Warmth Controls */}
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          {/* Warmth Meter */}
+          <div className="hidden sm:flex items-center space-x-1.5 bg-[#F4F8F4] border border-[#C6D8C4] px-3 py-1 rounded-full text-xs">
+            <Heart className="w-3.5 h-3.5 text-[#E07A5F] fill-[#E07A5F]" />
+            <span className="text-[#6B7C6C]">마음 온기도:</span>
+            <span className="text-[#3A5A40] font-mono font-bold">{warmthLevel}°C</span>
+          </div>
+
+          {/* Ambient Sound Switch */}
+          <button
+            onClick={toggleAmbient}
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs border transition-all ${
+              ambientActive 
+                ? 'bg-[#3A5A40] border-[#3A5A40] text-white shadow-sm' 
+                : 'bg-white border-[#E3DCD0] text-[#556656] hover:text-[#3A5A40]'
+            }`}
+            title="숲속 자연 바람 소음"
+          >
+            {ambientActive ? <Volume2 className="w-3.5 h-3.5 animate-pulse text-[#A3B189]" /> : <VolumeX className="w-3.5 h-3.5" />}
+            <span className="hidden xs:inline">{ambientActive ? '자연소음 On' : '자연소음 Off'}</span>
+          </button>
+
+          {/* Restart */}
+          <button
+            onClick={() => handleStartSession(category, selectedMood)}
+            className="p-1.5 rounded-xl bg-white border border-[#E3DCD0] hover:bg-[#E8F0E6] text-[#6B7C6C]"
+            title="대화 다시 시작"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </button>
+        </div>
+      </header>
+
+      {/* Main Conversation Canvas */}
+      <main className="relative z-10 flex-1 max-w-2xl w-full mx-auto p-4 sm:p-6 overflow-y-auto flex flex-col justify-between">
+        <div className="space-y-5 pb-6">
+          {/* Gentle Top Banner */}
+          <div className="text-center py-2">
+            <span className="text-[11px] text-[#556656] bg-white/80 px-3.5 py-1 rounded-full border border-[#E3DCD0] shadow-sm inline-flex items-center gap-1.5">
+              <Trees className="w-3.5 h-3.5 text-[#588157]" /> 햇살과 나뭇잎 그늘 아래서 당신의 마음을 편히 놓아두세요.
+            </span>
+          </div>
+
+          {chatMessages.map((msg) => {
+            const isUser = msg.role === 'user';
+            return (
+              <div
+                key={msg.id}
+                className={`flex ${isUser ? 'justify-end' : 'justify-start'} items-start space-x-2.5`}
+              >
+                {!isUser && (
+                  <div className="w-8 h-8 rounded-2xl bg-[#588157] text-white flex items-center justify-center shrink-0 mt-1 shadow-sm">
+                    <Leaf className="w-4 h-4 text-[#E8F0E6]" />
+                  </div>
+                )}
+
+                <div className={`max-w-[85%] sm:max-w-[78%] space-y-1`}>
+                  <div
+                    className={`p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
+                      isUser
+                        ? 'bg-[#3A5A40] text-white rounded-tr-none font-sans'
+                        : msg.isPivotal
+                        ? 'bg-gradient-to-b from-[#FFFFFF] to-[#F4F8F4] border-2 border-[#588157] text-[#1E2B20] rounded-tl-none shadow-md'
+                        : 'bg-white text-[#2D372E] border border-[#E3DCD0] rounded-tl-none font-serif'
+                    }`}
+                  >
+                    {msg.isPivotal && (
+                      <div className="flex items-center space-x-1.5 text-xs text-[#3A5A40] font-serif font-bold mb-2 pb-2 border-b border-[#D6E4D5]">
+                        <Sparkles className="w-4 h-4 text-[#C59B27]" />
+                        <span>고민을 관통하는 통찰과 추천 선택지</span>
+                      </div>
+                    )}
+                    <p className="whitespace-pre-line">{msg.text}</p>
+                  </div>
+
+                  <div className={`text-[10px] text-[#889989] px-1 ${isUser ? 'text-right' : 'text-left'}`}>
+                    {msg.timestamp}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Steeping / Brewing Loader */}
+          {isBrewing && (
+            <div className="flex justify-start items-start space-x-2.5">
+              <div className="w-8 h-8 rounded-2xl bg-[#588157] text-white flex items-center justify-center shrink-0 mt-1 shadow-sm">
+                <Leaf className="w-4 h-4 animate-spin text-[#E8F0E6]" />
+              </div>
+              <div className="bg-white border border-[#E3DCD0] p-4 rounded-2xl rounded-tl-none text-xs text-[#556656] flex items-center space-x-2 shadow-sm">
+                <span className="inline-block w-2 h-2 rounded-full bg-[#588157] animate-ping" />
+                <span>당신의 마음을 편안하게 조율하며 들어주는 중입니다...</span>
+              </div>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Pivotal Solution Button Callout */}
+        {chatMessages.length >= 3 && !isBrewing && (
+          <div className="my-2 text-center">
+            <button
+              onClick={handleRequestPivotalSolution}
+              className="inline-flex items-center space-x-2 bg-white hover:bg-[#E8F0E6] border border-[#588157] text-[#3A5A40] px-4 py-2 rounded-full text-xs font-semibold transition-all shadow-sm transform hover:scale-105"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#C59B27]" />
+              <span>고민의 본질을 짚는 해결방안/선택지 청하기</span>
+            </button>
+          </div>
+        )}
+
+        {/* Quick Prompts */}
+        {chatMessages.length <= 2 && (
+          <div className="my-2 space-y-1.5">
+            <div className="text-[11px] text-[#6B7C6C] px-1 font-medium">추천 이야기 선택해보기:</div>
+            <div className="flex flex-wrap gap-2">
+              {quickPrompts[category].map((prompt, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleSendMessage(prompt)}
+                  className="text-xs bg-white hover:bg-[#E8F0E6] border border-[#E3DCD0] text-[#4A594B] px-3.5 py-1.5 rounded-xl transition text-left shadow-sm"
+                >
+                  "{prompt}"
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* Input Footer */}
+      <footer className="relative z-20 bg-white/90 border-t border-[#E3DCD0] p-3 sm:p-4">
+        <div className="max-w-2xl mx-auto">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSendMessage();
+            }}
+            className="flex items-center space-x-2 bg-[#FAF9F5] border border-[#E3DCD0] focus-within:border-[#588157] rounded-2xl p-2 transition-all shadow-inner"
+          >
+            <input
+              type="text"
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              placeholder="마음속 고민을 편안하게 털어놓으세요..."
+              disabled={isBrewing}
+              className="flex-1 bg-transparent px-3 py-1.5 text-sm text-[#2D372E] placeholder-[#889989] focus:outline-none disabled:opacity-50 font-sans"
+            />
+            <button
+              type="submit"
+              disabled={!inputText.trim() || isBrewing}
+              className="p-2.5 bg-[#3A5A40] hover:bg-[#2D4532] disabled:bg-[#C6D8C4] text-white rounded-xl transition-all shadow-sm font-medium"
+            >
+              <Send className="w-4 h-4 text-[#E8F0E6]" />
+            </button>
+          </form>
+          <div className="flex justify-between items-center text-[10px] text-[#6B7C6C] mt-2 px-1">
+            <span>취조하지 않는 다정한 경청과 관통하는 솔루션을 제공합니다.</span>
+            <span>Gemini 3 Flash Engine</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
