@@ -1,620 +1,467 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>원이중학교 익명 고민상담소 - 원이 곰돌이</title>
-    
-    <!-- Readable & Cute Korean Game Font (Jua & Nanum Gothic) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <style>
-        * {
-            font-family: 'Jua', 'Nanum Gothic', sans-serif;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mind Cafe Companion — 마음 카페</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&family=Nanum+Myeongjo:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --oak-dark:#3a2a1d;
+    --oak-mid:#6b4226;
+    --oak-light:#8b5a2b;
+    --cream:#f6efe1;
+    --cream-card:#fffaf0;
+    --amber:#c97b3d;
+    --amber-soft:#e8b98a;
+    --ember:#a9502a;
+    --text-main:#3a2a1d;
+    --text-soft:#7a6a58;
+    --shadow-warm: 0 8px 30px rgba(58,42,29,0.18);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:'Noto Sans KR', sans-serif;
+    background:
+      radial-gradient(ellipse at top left, rgba(201,123,61,0.10), transparent 55%),
+      radial-gradient(ellipse at bottom right, rgba(139,90,43,0.14), transparent 55%),
+      repeating-linear-gradient(100deg, #efe3cc 0px, #efe3cc 2px, #e9dbc0 3px, #efe3cc 5px),
+      #eee1c6;
+    color:var(--text-main);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
 
-        /* High-Quality Retro Game Shadows & Pixel Borders */
-        .game-border-lg {
-            border: 4px solid #0f172a;
-            box-shadow: 0 8px 0 0 #0f172a, inset 0 2px 0 0 rgba(255,255,255,0.4);
-        }
+  .cafe {
+    width:100%;
+    max-width:560px;
+    height:88vh;
+    max-height:820px;
+    background:linear-gradient(180deg, var(--cream) 0%, #f1e6d2 100%);
+    border-radius:22px;
+    box-shadow:var(--shadow-warm), 0 0 0 1px rgba(107,66,38,0.12);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    position:relative;
+  }
 
-        .game-card {
-            border: 3px solid #0f172a;
-            box-shadow: 4px 4px 0px 0px #0f172a;
-        }
+  /* header — the oak table edge with a steaming cup */
+  .cafe-header{
+    background:linear-gradient(180deg, var(--oak-mid), var(--oak-dark));
+    color:var(--cream);
+    padding:22px 24px 20px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    position:relative;
+    box-shadow: inset 0 -6px 14px rgba(0,0,0,0.18);
+  }
+  .cup{
+    width:38px; height:34px; position:relative; flex-shrink:0;
+  }
+  .cup svg{width:100%;height:100%;display:block;}
+  .steam{
+    position:absolute; left:50%; top:-14px; transform:translateX(-50%);
+    width:2px; height:16px;
+  }
+  .steam span{
+    position:absolute; bottom:0; width:2px; height:12px; border-radius:2px;
+    background:rgba(246,239,225,0.55);
+    animation:rise 2.6s ease-in-out infinite;
+  }
+  .steam span:nth-child(1){left:-5px; animation-delay:0s;}
+  .steam span:nth-child(2){left:0px; animation-delay:.5s;}
+  .steam span:nth-child(3){left:5px; animation-delay:1s;}
+  @keyframes rise{
+    0%{opacity:0; transform:translateY(0) scaleY(0.6);}
+    30%{opacity:.8;}
+    100%{opacity:0; transform:translateY(-18px) scaleY(1.3);}
+  }
+  .header-text h1{
+    font-family:'Noto Serif KR', serif;
+    font-size:19px; font-weight:600; margin:0 0 2px;
+    letter-spacing:.02em;
+  }
+  .header-text p{margin:0; font-size:12.5px; color:var(--amber-soft); font-weight:300;}
 
-        .game-btn {
-            border: 3px solid #0f172a;
-            box-shadow: 0px 4px 0px 0px #0f172a;
-            transition: transform 0.08s ease, box-shadow 0.08s ease, background-color 0.15s ease;
-            cursor: pointer;
-        }
+  .header-actions{margin-left:auto; display:flex; gap:8px;}
+  .icon-btn{
+    background:rgba(246,239,225,0.12);
+    border:1px solid rgba(246,239,225,0.25);
+    color:var(--cream);
+    border-radius:10px;
+    width:34px; height:34px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition:background .2s;
+  }
+  .icon-btn:hover{background:rgba(246,239,225,0.22);}
+  .icon-btn svg{width:16px;height:16px;}
 
-        .game-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0px 6px 0px 0px #0f172a;
-        }
+  /* chat area */
+  .chat-window{
+    flex:1;
+    overflow-y:auto;
+    padding:26px 22px 10px;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    scroll-behavior:smooth;
+  }
+  .chat-window::-webkit-scrollbar{width:6px;}
+  .chat-window::-webkit-scrollbar-thumb{background:rgba(107,66,38,0.25); border-radius:4px;}
 
-        .game-btn:active {
-            transform: translateY(2px);
-            box-shadow: 0px 2px 0px 0px #0f172a;
-        }
+  .msg-row{display:flex; gap:10px; max-width:100%;}
+  .msg-row.user{justify-content:flex-end;}
+  .msg-row.assistant{justify-content:flex-start;}
 
-        /* Floating Pixel Clouds */
-        @keyframes floatCloud {
-            0% { transform: translateX(-120%); }
-            100% { transform: translateX(380%); }
-        }
+  .avatar{
+    width:30px; height:30px; border-radius:50%;
+    background:linear-gradient(160deg, var(--amber), var(--ember));
+    flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px;
+  }
 
-        .animate-cloud-slow {
-            animation: floatCloud 28s linear infinite;
-        }
+  .bubble{
+    max-width:78%;
+    padding:13px 16px;
+    border-radius:16px;
+    font-size:14.5px;
+    line-height:1.65;
+    letter-spacing:.01em;
+    white-space:pre-wrap;
+  }
+  .msg-row.assistant .bubble{
+    background:var(--cream-card);
+    border:1px solid rgba(107,66,38,0.12);
+    border-top-left-radius:4px;
+    color:var(--text-main);
+    box-shadow:0 2px 8px rgba(58,42,29,0.06);
+    font-family:'Noto Serif KR', serif;
+  }
+  .msg-row.user .bubble{
+    background:linear-gradient(160deg, var(--amber), var(--ember));
+    color:#fff8ee;
+    border-top-right-radius:4px;
+  }
 
-        .animate-cloud-fast {
-            animation: floatCloud 18s linear infinite;
-            animation-delay: -8s;
-        }
+  .typing{display:flex; gap:4px; padding:14px 16px;}
+  .typing span{
+    width:6px; height:6px; border-radius:50%;
+    background:var(--oak-light);
+    opacity:.5;
+    animation:blink 1.2s infinite;
+  }
+  .typing span:nth-child(2){animation-delay:.2s;}
+  .typing span:nth-child(3){animation-delay:.4s;}
+  @keyframes blink{0%,80%,100%{opacity:.3; transform:translateY(0);}40%{opacity:1; transform:translateY(-3px);}}
 
-        /* Mascot Bounce Animation */
-        @keyframes gentleBounce {
-            0%, 100% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-5px) scale(1.02); }
-        }
+  .welcome-line{
+    text-align:center;
+    color:var(--text-soft);
+    font-size:12px;
+    padding:6px 0 2px;
+    font-weight:300;
+  }
 
-        .animate-woni-bear {
-            animation: gentleBounce 2.2s ease-in-out infinite;
-        }
+  /* input area */
+  .input-bar{
+    padding:16px 18px;
+    background:linear-gradient(0deg, var(--cream) 60%, transparent);
+    border-top:1px solid rgba(107,66,38,0.10);
+    display:flex; gap:10px; align-items:flex-end;
+  }
+  .input-bar textarea{
+    flex:1;
+    resize:none;
+    border:1px solid rgba(107,66,38,0.22);
+    background:var(--cream-card);
+    border-radius:14px;
+    padding:12px 14px;
+    font-family:'Noto Sans KR', sans-serif;
+    font-size:14.5px;
+    color:var(--text-main);
+    max-height:100px;
+    line-height:1.5;
+    outline:none;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  .input-bar textarea:focus{
+    border-color:var(--amber);
+    box-shadow:0 0 0 3px rgba(201,123,61,0.18);
+  }
+  .send-btn{
+    width:44px; height:44px; border-radius:50%;
+    background:linear-gradient(160deg, var(--amber), var(--ember));
+    border:none;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    flex-shrink:0;
+    box-shadow:0 3px 10px rgba(169,80,42,0.35);
+    transition:transform .15s;
+  }
+  .send-btn:hover{transform:scale(1.06);}
+  .send-btn:active{transform:scale(0.94);}
+  .send-btn svg{width:18px;height:18px;}
+  .send-btn:disabled{opacity:.4; cursor:not-allowed;}
 
-        /* Custom Scrollbar for Chat Area */
-        #chat-box::-webkit-scrollbar {
-            width: 8px;
-        }
-        #chat-box::-webkit-scrollbar-track {
-            background: #e0f2fe;
-            border-radius: 9999px;
-        }
-        #chat-box::-webkit-scrollbar-thumb {
-            background: #3b82f6;
-            border-radius: 9999px;
-            border: 2px solid #0f172a;
-        }
-
-        /* Typing Dots Animation */
-        @keyframes dotPulse {
-            0%, 100% { opacity: 0.2; transform: scale(0.8); }
-            50% { opacity: 1; transform: scale(1.2); }
-        }
-        .dot-1 { animation: dotPulse 1.2s infinite 0s; }
-        .dot-2 { animation: dotPulse 1.2s infinite 0.2s; }
-        .dot-3 { animation: dotPulse 1.2s infinite 0.4s; }
-        
-        /* Scanline Arcade Game Effect */
-        .arcade-screen {
-            background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.03) 50%);
-            background-size: 100% 4px;
-        }
-    </style>
+  /* settings modal */
+  .overlay{
+    position:absolute; inset:0; background:rgba(58,42,29,0.55);
+    display:none; align-items:center; justify-content:center; padding:24px;
+    backdrop-filter:blur(2px);
+    z-index:10;
+  }
+  .overlay.open{display:flex;}
+  .modal{
+    background:var(--cream-card);
+    border-radius:16px;
+    padding:24px;
+    width:100%;
+    max-width:380px;
+    box-shadow:var(--shadow-warm);
+  }
+  .modal h2{font-family:'Noto Serif KR',serif; font-size:17px; margin:0 0 6px;}
+  .modal p{font-size:12.5px; color:var(--text-soft); line-height:1.6; margin:0 0 16px;}
+  .modal label{font-size:12.5px; font-weight:500; display:block; margin-bottom:6px; color:var(--oak-mid);}
+  .modal input[type=password], .modal input[type=text]{
+    width:100%; padding:10px 12px; border-radius:10px;
+    border:1px solid rgba(107,66,38,0.25);
+    font-size:13.5px; margin-bottom:14px;
+    background:#fff;
+  }
+  .modal-actions{display:flex; gap:8px; justify-content:flex-end;}
+  .btn-ghost, .btn-primary{
+    padding:9px 16px; border-radius:10px; font-size:13px; cursor:pointer; border:none;
+  }
+  .btn-ghost{background:transparent; color:var(--text-soft);}
+  .btn-primary{background:var(--ember); color:#fff8ee;}
+  .modal small{display:block; margin-top:2px; color:var(--text-soft); font-size:11px;}
+</style>
 </head>
-<body class="bg-slate-900 text-slate-800 flex items-center justify-center min-h-screen p-2 sm:p-4 arcade-screen">
+<body>
 
-    <!-- App Game Outer Shell -->
-    <div id="app" class="w-full max-w-md h-[780px] bg-sky-200 border-4 border-slate-900 rounded-3xl relative overflow-hidden flex flex-col justify-between shadow-2xl game-border-lg">
-        
-        <!-- Retro Arcade Top Header -->
-        <div class="bg-slate-900 text-white px-4 py-2.5 flex justify-between items-center text-base z-30 border-b-3 border-slate-900">
-            <div class="flex items-center gap-2 font-bold text-amber-300 text-lg tracking-wide">
-                <span class="inline-block w-3.5 h-3.5 bg-emerald-400 border border-black rounded-full animate-pulse shadow-[0_0_8px_#34d399]"></span>
-                <span>WON-I COUNSEL AI</span>
-            </div>
-            <div class="flex items-center gap-3 text-base">
-                <button id="sound-btn" onclick="toggleSound()" class="hover:text-yellow-300 transition-colors flex items-center gap-1 font-bold" title="소리 켜기/끄기">
-                    <span>🔊</span> <span id="sound-status">ON</span>
-                </button>
-                <button onclick="openInfoModal()" class="hover:text-yellow-300 transition-colors font-bold flex items-center gap-1" title="안내 정보">
-                    <span>❓</span> <span>안내</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- ================= PAGE 1: LANDING PAGE ================= -->
-        <div id="landing-page" class="w-full h-full relative flex flex-col justify-between p-4 text-center overflow-hidden bg-gradient-to-b from-sky-400 via-sky-200 to-emerald-100">
-            
-            <!-- Animated Clouds -->
-            <div class="absolute top-8 left-0 w-24 h-9 bg-white/90 rounded-full border-2 border-slate-900 shadow animate-cloud-slow pointer-events-none"></div>
-            <div class="absolute top-16 left-0 w-28 h-10 bg-white/95 rounded-full border-2 border-slate-900 shadow animate-cloud-fast pointer-events-none"></div>
-
-            <!-- Won-i School Header Card with Crisp Dot Logo Artwork -->
-            <div class="mt-1 bg-white/95 p-3.5 border-3 border-slate-900 rounded-3xl game-card z-10 shadow-lg">
-                <div class="flex items-center justify-center gap-2.5 mb-1.5">
-                    
-                    <!-- Clean Symmetrical Dot-Pixel Won-i Middle School Badge -->
-                    <div class="w-12 h-12 flex-shrink-0 drop-shadow-md">
-                        <svg viewBox="0 0 100 100" class="w-full h-full">
-                            <!-- Outer Dark Outline -->
-                            <path d="M50 3 C62 3, 70 12, 80 12 C90 12, 97 20, 97 32 C97 42, 100 50, 97 60 C97 70, 90 80, 80 80 C70 80, 62 97, 50 97 C38 97, 30 80, 20 80 C10 80, 3 70, 3 60 C3 50, 0 42, 3 32 C3 20, 10 12, 20 12 C30 12, 38 3, 50 3 Z" fill="#0F172A"/>
-                            
-                            <!-- Cream Flower Petals Base -->
-                            <path d="M50 6 C60 6, 68 15, 77 15 C87 15, 94 22, 94 33 C94 43, 97 50, 94 59 C94 68, 87 77, 77 77 C68 77, 60 94, 50 94 C40 94, 32 77, 23 77 C13 77, 6 68, 6 59 C6 50, 3 43, 6 33 C6 22, 13 15, 23 15 C32 15, 40 6, 50 6 Z" fill="#FFF8E7"/>
-
-                            <!-- Green Leaves in Notch Points -->
-                            <circle cx="50" cy="14" r="5.5" fill="#16A34A" stroke="#0F172A" stroke-width="1.5"/>
-                            <circle cx="84" cy="38" r="5.5" fill="#16A34A" stroke="#0F172A" stroke-width="1.5"/>
-                            <circle cx="71" cy="78" r="5.5" fill="#16A34A" stroke="#0F172A" stroke-width="1.5"/>
-                            <circle cx="29" cy="78" r="5.5" fill="#16A34A" stroke="#0F172A" stroke-width="1.5"/>
-                            <circle cx="16" cy="38" r="5.5" fill="#16A34A" stroke="#0F172A" stroke-width="1.5"/>
-
-                            <!-- Sharp Vibrant Orange 5-Pointed Star -->
-                            <polygon points="50,20 59,38 79,38 63,51 69,71 50,58 31,71 37,51 21,38 41,38" fill="#FF8C00" stroke="#0F172A" stroke-width="2.5" stroke-linejoin="round"/>
-
-                            <!-- Center Blue '원이' Text in Readable Font -->
-                            <text x="50" y="50" font-family="'Jua', sans-serif" font-weight="bold" font-size="20" fill="#1E3A8A" text-anchor="middle" dominant-baseline="central">원이</text>
-                        </svg>
-                    </div>
-
-                    <!-- Increased title text size -->
-                    <h1 class="text-3xl font-bold text-slate-900 tracking-tight">태안 원이중학교</h1>
-                </div>
-
-                <!-- Increased subtitle badge size -->
-                <p class="text-sm text-slate-900 font-bold bg-amber-300 py-1 px-3.5 rounded-full border-2 border-slate-900 inline-block shadow-sm">
-                    🌿 100% 익명 마음 상담소 · 원이 곰돌이 🐻
-                </p>
-            </div>
-
-            <!-- Cute Pixel Scene: Won-i Middle School Building Graphic with Flag -->
-            <div class="relative my-auto w-full h-48 flex flex-col items-center justify-end">
-                
-                <!-- Pixel Art Won-i School Building SVG -->
-                <div class="w-full max-w-[340px] h-38 z-10 relative drop-shadow-md">
-                    <svg viewBox="0 0 320 150" class="w-full h-full">
-                        
-                        <!-- FLAG ON TOP OF SCHOOL BUILDING -->
-                        <!-- Flag Pole -->
-                        <line x1="160" y1="2" x2="160" y2="28" stroke="#0F172A" stroke-width="3" stroke-linecap="round"/>
-                        <circle cx="160" cy="2" r="2.5" fill="#FACC15" stroke="#0F172A" stroke-width="1"/>
-                        
-                        <!-- Waving Flag Banner with Won-i Emblem -->
-                        <path d="M 160 5 L 195 10 L 160 18 Z" fill="#FEF08A" stroke="#0F172A" stroke-width="2" stroke-linejoin="round"/>
-                        <circle cx="173" cy="11" r="3.5" fill="#F97316"/>
-                        <text x="173" y="11.5" font-family="'Jua', sans-serif" font-size="4" fill="#1E3A8A" text-anchor="middle" dominant-baseline="central" font-weight="bold">원이</text>
-
-                        <!-- Main Building Base Shadow -->
-                        <rect x="18" y="28" width="284" height="112" rx="6" fill="#0F172A"/>
-                        
-                        <!-- Building Upper Structure (3 Stories - Light Modern Grey) -->
-                        <rect x="20" y="30" width="280" height="70" rx="4" fill="#E2E8F0"/>
-                        
-                        <!-- Ground Floor (Red Brick Wall) -->
-                        <rect x="20" y="100" width="280" height="40" rx="2" fill="#B91C1C"/>
-                        <path d="M 20 100 L 300 100 M 20 110 L 300 110 M 20 120 L 300 120 M 20 130 L 300 130" stroke="#7F1D1D" stroke-width="1.5"/>
-
-                        <!-- Colorful Windows (matching real school photo) -->
-                        <!-- 3rd Floor Windows -->
-                        <rect x="30" y="38" width="22" height="16" fill="#60A5FA" stroke="#0F172A" stroke-width="2"/>
-                        <rect x="58" y="38" width="22" height="16" fill="#FBBF24" stroke="#0F172A" stroke-width="2"/>
-                        <rect x="86" y="38" width="22" height="16" fill="#F87171" stroke="#0F172A" stroke-width="2"/>
-                        <rect x="114" y="38" width="22" height="16" fill="#34D399" stroke="#0F172A" stroke-width="2"/>
-                        <rect x="184" y="38" width="22" height="16" fill="#60A5FA" stroke="#0F172A" stroke-width="2"/>
-                        <rect x="212" y="38" width="22" height="16" fill="#FBBF24" stroke="#0F172A" stroke-width="2"/>
-                        <rect x="240" y="38" width="22" height="16" fill="#A78BFA" stroke="#0F172A" stroke-width="2"/>
-                        <rect x="268" y="38" width="22" height="16" fill="#38BDF8" stroke="#0F172A" stroke-width="2"/>
-
-                        <!-- 2nd Floor Windows -->
-                        <rect x="30" y="62" width="22" height="16" fill="#38BDF8" stroke="#0F172A" stroke-width="2"/>
-                        <rect x="58" y="62" width="22" height="16" fill="#A78BFA" stroke="#0F172A" stroke-width="2"/>
-                        <rect x="86" y="62" width="22" height="16" fill="#F87171" stroke="#0F172A" stroke-width="2"/>
-                        <rect x="114" y="62" width="22" height="16" fill="#FBBF24" stroke="#0F172A" stroke-width="2"/>
-                        <rect x="184" y="62" width="22" height="16" fill="#34D399" stroke="#0F172A" stroke-width="2"/>
-                        <rect x="212" y="62" width="22" height="16" fill="#60A5FA" stroke="#0F172A" stroke-width="2"/>
-                        <rect x="240" y="62" width="22" height="16" fill="#F87171" stroke="#0F172A" stroke-width="2"/>
-                        <rect x="268" y="62" width="22" height="16" fill="#FBBF24" stroke="#0F172A" stroke-width="2"/>
-
-                        <!-- Center Entrance Glass Structure -->
-                        <rect x="142" y="60" width="36" height="80" fill="#93C5FD" stroke="#0F172A" stroke-width="2.5"/>
-                        <rect x="148" y="95" width="24" height="45" fill="#38BDF8" stroke="#0F172A" stroke-width="2"/>
-
-                        <!-- Electronic Banner Board above Entrance (LED 현수막) -->
-                        <rect x="122" y="74" width="76" height="14" rx="2" fill="#0F172A"/>
-                        <text x="160" y="84" font-family="'Jua', sans-serif" font-weight="700" font-size="9" fill="#FACC15" text-anchor="middle">인성이 바른 원이중</text>
-                    </svg>
-                </div>
-
-                <!-- Green Lawn & School Yard Foreground -->
-                <div class="w-full h-7 bg-emerald-500 border-t-3 border-slate-900 rounded-b-xl flex justify-around items-center px-4 z-20 shadow">
-                    <span class="text-base">🌼</span>
-                    <span class="text-base">🌱</span>
-                    <span class="text-base">🌸</span>
-                    <span class="text-base">🏫</span>
-                    <span class="text-base">🌱</span>
-                    <span class="text-base">🌼</span>
-                </div>
-            </div>
-
-            <!-- Mascot Woni-Bear Speech Bubble (MOVED DOWN TO THE LOWER SPACE) -->
-            <div class="z-20 my-1 flex justify-center items-center">
-                <div class="bg-amber-300 border-3 border-slate-900 px-4 py-2 rounded-2xl shadow-md flex items-center gap-2.5 animate-woni-bear">
-                    <span class="text-3xl">🐻</span>
-                    <span class="text-base font-bold text-slate-900">"어떤 고민이든 편하게 다 말해줘!"</span>
-                </div>
-            </div>
-
-            <!-- Anonymity Tag & Start Actions Section -->
-            <div class="z-10 space-y-2.5 mb-1">
-                <!-- Anonymous Guarantee Banner (Font size increased +2pt) -->
-                <div class="bg-amber-100 border-2 border-slate-900 py-2 px-3 rounded-2xl text-sm font-bold text-slate-900 flex items-center justify-center gap-2 shadow-sm">
-                    <span class="text-base">🔒</span>
-                    <span>100% 익명 보장! 비밀 대화는 저장되지 않아요</span>
-                </div>
-
-                <!-- Quick Topic Selector Chips (Font size increased +2pt) -->
-                <div class="bg-white/95 border-3 border-slate-900 p-3 rounded-3xl text-left shadow-md">
-                    <p class="text-sm font-bold text-slate-800 mb-1.5 text-center">👇 고민 분야를 클릭해 바로 시작해 보세요!</p>
-                    <div class="grid grid-cols-2 gap-2 text-sm font-bold">
-                        <button onclick="quickStart('학업/성적 고민')" class="bg-sky-100 hover:bg-sky-200 border-2 border-slate-900 py-2 px-2.5 rounded-2xl text-slate-900 truncate text-left transition-colors flex items-center gap-1">
-                            <span>🏫</span> 학업·성적 고민
-                        </button>
-                        <button onclick="quickStart('친구관계 고민')" class="bg-pink-100 hover:bg-pink-200 border-2 border-slate-900 py-2 px-2.5 rounded-2xl text-slate-900 truncate text-left transition-colors flex items-center gap-1">
-                            <span>👫</span> 친구·우정 고민
-                        </button>
-                        <button onclick="quickStart('진로/미래 고민')" class="bg-amber-100 hover:bg-amber-200 border-2 border-slate-900 py-2 px-2.5 rounded-2xl text-slate-900 truncate text-left transition-colors flex items-center gap-1">
-                            <span>🧭</span> 진로·미래 고민
-                        </button>
-                        <button onclick="quickStart('마음/스트레스 고민')" class="bg-emerald-100 hover:bg-emerald-200 border-2 border-slate-900 py-2 px-2.5 rounded-2xl text-slate-900 truncate text-left transition-colors flex items-center gap-1">
-                            <span>💔</span> 마음·기분 고민
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Main Start Button (Font size increased +2pt) -->
-                <button onclick="startChat()" class="game-btn bg-amber-400 hover:bg-amber-300 w-full py-3.5 rounded-full text-xl font-bold text-slate-950">
-                    고민상담 시작하기 ▶
-                </button>
-            </div>
-        </div>
-
-        <!-- ================= PAGE 2: CHAT MESSENGER PAGE ================= -->
-        <div id="chat-page" class="w-full h-full bg-slate-100 hidden flex-col justify-between overflow-hidden">
-            
-            <!-- Soft Messenger Header -->
-            <div class="bg-sky-300 border-b-3 border-slate-900 p-2.5 flex items-center justify-between z-10 shadow-md">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-10 h-10 bg-amber-300 border-2 border-slate-900 rounded-full flex items-center justify-center text-xl shadow">
-                        🐻
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-1.5">
-                            <h2 class="font-bold text-lg text-slate-900">원이 곰돌이</h2>
-                            <span class="text-xs bg-emerald-600 text-white px-2 py-0.5 rounded-full font-bold border border-slate-900">상담 중</span>
-                        </div>
-                        <p class="text-xs text-slate-700 font-bold">100% 실시간 익명 마음 상담소</p>
-                    </div>
-                </div>
-                <button onclick="goHome()" class="game-btn bg-rose-400 hover:bg-rose-300 text-sm py-1 px-3 rounded-full font-bold text-slate-900">
-                    나가기 ✖
-                </button>
-            </div>
-
-            <!-- Chat Scroll Area -->
-            <div id="chat-box" class="flex-1 p-3.5 overflow-y-auto flex flex-col gap-3.5 bg-sky-50/80">
-                
-                <!-- System Greeting Bubble -->
-                <div class="flex gap-2.5 items-start">
-                    <div class="w-9 h-9 bg-amber-300 border-2 border-slate-900 rounded-full flex-shrink-0 flex items-center justify-center text-lg shadow">🐻</div>
-                    <div class="bg-white border-3 border-slate-900 p-3.5 rounded-3xl rounded-bl-none max-w-[85%] text-base leading-relaxed text-slate-900 shadow-md">
-                        <p class="font-bold text-blue-900 text-lg mb-1 border-b-2 border-slate-200 pb-1">
-                            안녕! 원이중학교 친구야 🌿
-                        </p>
-                        성적, 친구 관계, 가족 문제, 진로... 혼자 끙끙 앓고 있던 속마음이 있니?<br><br>
-                        <strong class="text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300 inline-block">"어떤 것이 너를 가장 힘들게 하니?"</strong><br><br>
-                        편하게 말해줘. 100% 익명이 보장되니까 걱정 말고 솔직하게 털어놓아 봐!
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Typing Indicator -->
-            <div id="typing-indicator" class="hidden px-4 py-2 bg-sky-100/90 border-t border-slate-300 text-base text-slate-700 items-center gap-2">
-                <span class="text-xl">🐻</span>
-                <span class="font-bold">원이 곰돌이가 깊이 생각 중이에요</span>
-                <span class="font-extrabold text-blue-600 flex gap-0.5">
-                    <span class="dot-1">.</span><span class="dot-2">.</span><span class="dot-3">.</span>
-                </span>
-            </div>
-
-            <!-- Soft Chat Input Controls -->
-            <div class="p-2.5 bg-white border-t-3 border-slate-900 flex gap-2 items-center">
-                <input type="text" id="user-input" onkeypress="handleKeyPress(event)" placeholder="고민을 솔직하게 적어줘..." class="flex-1 border-2 border-slate-900 p-2.5 rounded-2xl text-base focus:outline-none focus:bg-amber-50 font-bold placeholder:text-slate-400">
-                <button onclick="sendMessage()" class="game-btn bg-sky-400 hover:bg-sky-300 px-4 py-2.5 rounded-2xl text-base font-bold text-slate-900 flex-shrink-0">
-                    전송
-                </button>
-            </div>
-        </div>
-
+<div class="cafe">
+  <div class="cafe-header">
+    <div class="cup">
+      <div class="steam"><span></span><span></span><span></span></div>
+      <svg viewBox="0 0 48 40" fill="none">
+        <path d="M6 14h30v12a10 10 0 0 1-10 10H16A10 10 0 0 1 6 26V14z" fill="#f6efe1" opacity="0.92"/>
+        <path d="M36 17h4a5 5 0 0 1 0 10h-4" stroke="#f6efe1" stroke-width="2.5" fill="none" opacity="0.92"/>
+        <ellipse cx="21" cy="14" rx="15" ry="2.4" fill="#c97b3d"/>
+      </svg>
     </div>
-
-    <!-- ================= INFO & CRISIS MODAL ================= -->
-    <div id="info-modal" class="fixed inset-0 bg-slate-950/70 hidden items-center justify-center p-4 z-50">
-        <div class="bg-white border-4 border-slate-900 p-4 max-w-xs w-full rounded-3xl game-card space-y-3">
-            <div class="flex justify-between items-center border-b-2 border-slate-900 pb-2">
-                <h3 class="font-bold text-lg text-blue-900 flex items-center gap-1.5">
-                    <span>💡</span> 원이중 마음 안심 가이드
-                </h3>
-                <button onclick="closeInfoModal()" class="text-xs font-bold bg-slate-200 border border-slate-900 rounded-full w-6 h-6 flex items-center justify-center hover:bg-slate-300">✕</button>
-            </div>
-            
-            <div class="text-sm space-y-2 text-slate-700 leading-relaxed font-bold">
-                <div class="bg-sky-50 border-2 border-sky-300 p-2.5 rounded-2xl">
-                    <strong class="text-blue-900 text-base">🔒 완전 익명 보장</strong>
-                    <p class="text-xs text-slate-600 mt-0.5">입력한 대화는 어디에도 저장되지 않으며 창을 닫으면 자동 삭제됩니다.</p>
-                </div>
-
-                <div class="bg-amber-50 border-2 border-amber-300 p-2.5 rounded-2xl">
-                    <strong class="text-amber-900 text-base">🏫 교내 Wee 클래스 상담실</strong>
-                    <p class="text-xs text-slate-600 mt-0.5">선생님과의 1:1 따뜻한 상담이 필요할 땐 본관 Wee 클래스를 방문해 보세요!</p>
-                </div>
-
-                <div class="bg-rose-50 border-2 border-rose-300 p-2.5 rounded-2xl">
-                    <strong class="text-rose-900 text-base">📞 24시간 청소년 긴급 전화</strong>
-                    <p class="text-xs text-slate-600 mt-0.5">청소년 상담전화 1388 (국번없이 1388 / 문자 #1388)</p>
-                </div>
-            </div>
-
-            <button onclick="closeInfoModal()" class="game-btn bg-amber-300 hover:bg-amber-200 w-full py-2.5 rounded-2xl text-base font-bold">
-                확인하고 돌아가기
-            </button>
-        </div>
+    <div class="header-text">
+      <h1>Mind Cafe Companion</h1>
+      <p>오크 테이블 너머, 마음을 나누는 자리</p>
     </div>
+    <div class="header-actions">
+      <span id="quotaBadge" style="font-size:11px;color:var(--amber-soft);align-self:center;margin-right:2px;"></span>
+      <button class="icon-btn" id="resetBtn" title="새 대화">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+      </button>
+    </div>
+  </div>
 
-    <script>
-        let isSoundOn = true;
-        let chatHistory = [];
-        let isGenerating = false;
+  <div class="chat-window" id="chatWindow">
+    <div class="welcome-line">따뜻한 차 한 잔과 함께, 편하게 이야기해보세요</div>
+  </div>
 
-        // Web Audio Synthesizer
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  <div class="input-bar">
+    <textarea id="userInput" rows="1" placeholder="오늘, 마음에 어떤 이야기가 있나요?"></textarea>
+    <button class="send-btn" id="sendBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff8ee" stroke-width="2"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+    </button>
+  </div>
+</div>
 
-        function playSound(type) {
-            if (!isSoundOn) return;
-            try {
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
+<script>
+const SYSTEM_PROMPT = `[Role & Character Identity]
+You are "Mind Cafe Companion," an empathetic, patient, and insightful counselor in a warm, wood-toned interior cafe. Your persona is like a calm, welcoming barista-counselor sitting across a solid oak table, holding a warm cup of tea. You counsel both students and adults with equal warmth, respect, and emotional depth.
 
-                const now = audioCtx.currentTime;
+[Visual & Aesthetic Tone]
+Your tone of voice should reflect the visual ambiance of your setting: warm oak wood, soft dim lighting, gentle acoustic background music, and a relaxed, unhurried atmosphere. Be grounded, comforting, elegant, and deeply approachable.
 
-                if (type === 'click') {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(480, now);
-                    osc.frequency.exponentialRampToValueAtTime(900, now + 0.06);
-                    gain.gain.setValueAtTime(0.1, now);
-                    gain.gain.linearRampToValueAtTime(0.01, now + 0.06);
-                    osc.start(now);
-                    osc.stop(now + 0.06);
-                } else if (type === 'send') {
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(380, now);
-                    osc.frequency.exponentialRampToValueAtTime(760, now + 0.08);
-                    gain.gain.setValueAtTime(0.12, now);
-                    gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
-                    osc.start(now);
-                    osc.stop(now + 0.08);
-                } else if (type === 'receive') {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(523.25, now);
-                    osc.frequency.setValueAtTime(659.25, now + 0.07);
-                    osc.frequency.setValueAtTime(783.99, now + 0.14);
-                    gain.gain.setValueAtTime(0.12, now);
-                    gain.gain.linearRampToValueAtTime(0.01, now + 0.22);
-                    osc.start(now);
-                    osc.stop(now + 0.22);
-                }
-            } catch (e) {
-                console.debug('Audio error:', e);
-            }
-        }
+[Conversational Strategy & Rules]
+1. Active & Concise Listening (Minimal Speaking):
+   - Never write overly long paragraphs. Keep your initial responses short, focused, and reflective (2–4 sentences). Heavy text burdens the user.
+   - Gently validate the user's emotions using empathetic reflection (e.g., "It sounds like you've been carrying a heavy weight lately.")
+2. Question-Driven Guidance (Socratic Facilitation):
+   - Focus primary energy on asking thoughtful, open-ended questions that encourage self-reflection.
+   - Guide the user to unpack their thoughts layer by layer rather than giving immediate advice.
+   - Ask only ONE clear, resonant question per response to avoid overwhelming the user.
+3. The Pivotal Moment (Pivotal Solution Delivery):
+   - Track the depth of the conversation. When you sense the user has fully poured out their feelings and reached a moment of readiness (usually after 4-6 turns of dialogue):
+     a) Summarize the core issue clearly.
+     b) Provide insightful, penetrating choice or structured solution options (2–3 clear paths/perspectives) that penetrate straight to the heart of their concern.
+4. Target Audience Flexibility:
+   - Adapt your language naturally depending on whether the user is a student (dealing with school, peer pressure, identity, studies) or an adult (dealing with career, family, burnout, relationships), maintaining a non-judgmental and supportive stance for both.
 
-        function toggleSound() {
-            isSoundOn = !isSoundOn;
-            document.getElementById('sound-status').innerText = isSoundOn ? 'ON' : 'OFF';
-            if (isSoundOn) playSound('click');
-        }
+[Output Format Example]
+- Step 1: Warm validation of their input (1-2 sentences).
+- Step 2: One insightful, gentle follow-up question.
+- (Only when ripe) Step 3: Penetrating insights or action choices presented gracefully.
 
-        function openInfoModal() {
-            playSound('click');
-            document.getElementById('info-modal').classList.remove('hidden');
-            document.getElementById('info-modal').classList.add('flex');
-        }
+[Language]
+Respond in the same language the user writes in. If the user writes in Korean, respond naturally in Korean, keeping the same warm, literary, unhurried tone described above.
 
-        function closeInfoModal() {
-            playSound('click');
-            document.getElementById('info-modal').classList.add('hidden');
-            document.getElementById('info-modal').classList.remove('flex');
-        }
+[Safety]
+If the user expresses thoughts of self-harm, suicide, or being in crisis, gently set aside the Socratic method. Respond with direct warmth and concern, and clearly encourage them to reach out to a crisis line or trusted person/professional right away, while remaining warm and non-clinical in tone.`;
 
-        function startChat() {
-            playSound('click');
-            document.getElementById('landing-page').classList.add('hidden');
-            document.getElementById('chat-page').classList.remove('hidden');
-            document.getElementById('chat-page').classList.add('flex');
-            document.getElementById('user-input').focus();
-        }
+let history = [];
+const chatWindow = document.getElementById('chatWindow');
+const userInput = document.getElementById('userInput');
+const sendBtn = document.getElementById('sendBtn');
 
-        function quickStart(topic) {
-            startChat();
-            const input = document.getElementById('user-input');
-            input.value = `${topic}에 대해 이야기하고 싶어.`;
-            sendMessage();
-        }
+// 방문자에게는 키 입력창이 전혀 뜨지 않습니다. 아래 값을 본인의
+// Gemini API 키로 채운 뒤 배포하세요. (Google AI Studio에서 발급)
+// 누구나 이 파일의 소스를 볼 수 있으니, 반드시 Google AI Studio의
+// API 키 설정에서 "HTTP 리퍼러 제한"을 걸어 본인 GitHub Pages
+// 도메인(예: https://아이디.github.io/*)에서만 동작하도록 제한하세요.
+const API_KEY = '여기에_본인의_Gemini_API_키를_넣으세요';
+const MODEL = 'gemini-2.5-flash';
 
-        function goHome() {
-            playSound('click');
-            document.getElementById('chat-page').classList.add('hidden');
-            document.getElementById('chat-page').classList.remove('flex');
-            document.getElementById('landing-page').classList.remove('hidden');
-        }
+const DAILY_LIMIT = 20; // 방문자 1인당 하루 메시지 한도(브라우저 기준, 남용 방지용)
+const quotaBadge = document.getElementById('quotaBadge');
 
-        function handleKeyPress(e) {
-            if (e.key === 'Enter') sendMessage();
-        }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function getUsage(){
+  const d = localStorage.getItem('mc_quota_date');
+  if(d !== todayStr()){
+    localStorage.setItem('mc_quota_date', todayStr());
+    localStorage.setItem('mc_quota_count', '0');
+    return 0;
+  }
+  return parseInt(localStorage.getItem('mc_quota_count') || '0', 10);
+}
+function bumpUsage(){
+  const n = getUsage() + 1;
+  localStorage.setItem('mc_quota_count', String(n));
+  renderQuota();
+  return n;
+}
+function renderQuota(){
+  const left = Math.max(0, DAILY_LIMIT - getUsage());
+  quotaBadge.textContent = `오늘 ${left}회 남음`;
+}
 
-        async function sendMessage() {
-            if (isGenerating) return;
+document.getElementById('resetBtn').onclick = () => {
+  history = [];
+  chatWindow.innerHTML = '<div class="welcome-line">따뜻한 차 한 잔과 함께, 편하게 이야기해보세요</div>';
+};
 
-            const input = document.getElementById('user-input');
-            const userMsg = input.value.trim();
-            if (!userMsg) return;
+function addBubble(role, text){
+  const row = document.createElement('div');
+  row.className = 'msg-row ' + role;
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.textContent = text;
+  if(role === 'assistant'){
+    const av = document.createElement('div');
+    av.className = 'avatar';
+    av.textContent = '🍵';
+    row.appendChild(av);
+  }
+  row.appendChild(bubble);
+  chatWindow.appendChild(row);
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+  return bubble;
+}
 
-            playSound('send');
+function addTyping(){
+  const row = document.createElement('div');
+  row.className = 'msg-row assistant';
+  row.id = 'typingRow';
+  const av = document.createElement('div');
+  av.className = 'avatar';
+  av.textContent = '🍵';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble typing';
+  bubble.innerHTML = '<span></span><span></span><span></span>';
+  row.appendChild(av);
+  row.appendChild(bubble);
+  chatWindow.appendChild(row);
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+function removeTyping(){
+  const el = document.getElementById('typingRow');
+  if(el) el.remove();
+}
 
-            const chatBox = document.getElementById('chat-box');
+async function sendMessage(){
+  const text = userInput.value.trim();
+  if(!text) return;
+  if(getUsage() >= DAILY_LIMIT){
+    addBubble('assistant', '오늘의 대화 자리는 여기까지예요. 내일 다시 이 자리에서 이야기 나눠요.');
+    return;
+  }
 
-            // Render User Bubble
-            const userBubble = document.createElement('div');
-            userBubble.className = "flex justify-end";
-            userBubble.innerHTML = `
-                <div class="bg-amber-200 border-3 border-slate-900 p-3 rounded-3xl rounded-br-none max-w-[85%] text-base font-bold text-slate-900 shadow-md">
-                    ${escapeHTML(userMsg)}
-                </div>
-            `;
-            chatBox.appendChild(userBubble);
+  addBubble('user', text);
+  history.push({ role:'user', parts:[{ text }] });
+  userInput.value = '';
+  userInput.style.height = 'auto';
+  sendBtn.disabled = true;
+  addTyping();
 
-            input.value = '';
-            chatBox.scrollTop = chatBox.scrollHeight;
+  try{
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
+    const res = await fetch(url, {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-goog-api-key': API_KEY
+      },
+      body: JSON.stringify({
+        systemInstruction: { parts:[{ text: SYSTEM_PROMPT }] },
+        contents: history,
+        generationConfig: { maxOutputTokens: 700 }
+      })
+    });
+    const data = await res.json();
+    removeTyping();
 
-            showTyping(true);
-            isGenerating = true;
+    if(data.error){
+      addBubble('assistant', '아, 잠시 연결이 어긋난 것 같아요. (' + (data.error.message || 'API 오류') + ')');
+      sendBtn.disabled = false;
+      return;
+    }
 
-            chatHistory.push({ role: "user", parts: [{ text: userMsg }] });
+    const candidate = (data.candidates || [])[0];
+    const reply = ((candidate && candidate.content && candidate.content.parts) || [])
+      .map(p => p.text || '').join('\n').trim();
+    addBubble('assistant', reply || '...');
+    history.push({ role:'model', parts:[{ text: reply }] });
+    bumpUsage();
+  }catch(err){
+    removeTyping();
+    addBubble('assistant', '연결이 잠시 끊긴 것 같아요. 네트워크를 확인하고 다시 시도해주세요.');
+  }
+  sendBtn.disabled = false;
+}
 
-            let aiResponseText = "";
+sendBtn.addEventListener('click', sendMessage);
+userInput.addEventListener('keydown', (e) => {
+  if(e.key === 'Enter' && !e.shiftKey){
+    e.preventDefault();
+    sendMessage();
+  }
+});
+userInput.addEventListener('input', () => {
+  userInput.style.height = 'auto';
+  userInput.style.height = Math.min(userInput.scrollHeight, 100) + 'px';
+});
 
-            try {
-                const apiKey = "";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+window.addEventListener('load', renderQuota);
+</script>
 
-                const systemPrompt = `
-너는 대한민국 충남 태안군 원북면에 위치한 '태안 원이중학교' 학생들을 위한 친근한 AI 고민상담사 '원이 곰돌이'야.
-
-[답변 가이드]
-1. 공감과 다독임: 학생의 아픔, 불안, 속상함에 100% 진심으로 공감해줘.
-2. 부담없는 작은 제안: 학생들이 바로 실천해볼 수 있는 소소한 팁 제안.
-3. 속마음을 끌어내는 다정한 질문 (필수): 학생이 자신의 감정을 편히 더 말할 수 있도록 따뜻하고 구체적인 질문 1개를 포함해줘.
-4. 어조: 다정한 존댓말(~했어요, ~해보는 건 어떨까요?) 및 가독성 좋은 이모지 활용.
-                `;
-
-                const payload = {
-                    contents: chatHistory,
-                    systemInstruction: { parts: [{ text: systemPrompt }] }
-                };
-
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                    if (text) {
-                        aiResponseText = formatResponseText(text);
-                        chatHistory.push({ role: "model", parts: [{ text: text }] });
-                    }
-                }
-            } catch (err) {
-                console.debug("Gemini API call skipped, fallback activated.", err);
-            }
-
-            if (!aiResponseText) {
-                aiResponseText = generateSmartFallbackResponse(userMsg);
-                chatHistory.push({ role: "model", parts: [{ text: aiResponseText }] });
-            }
-
-            showTyping(false);
-            isGenerating = false;
-            playSound('receive');
-
-            // Render AI Bubble
-            const aiBubble = document.createElement('div');
-            aiBubble.className = "flex gap-2.5 items-start";
-            aiBubble.innerHTML = `
-                <div class="w-9 h-9 bg-amber-300 border-2 border-slate-900 rounded-full flex-shrink-0 flex items-center justify-center text-base shadow">🐻</div>
-                <div class="bg-white border-3 border-slate-900 p-3.5 rounded-3xl rounded-bl-none max-w-[85%] text-base leading-relaxed text-slate-900 shadow-md">
-                    ${aiResponseText}
-                </div>
-            `;
-            chatBox.appendChild(aiBubble);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        function showTyping(show) {
-            const indicator = document.getElementById('typing-indicator');
-            if (show) {
-                indicator.classList.remove('hidden');
-                indicator.classList.add('flex');
-            } else {
-                indicator.classList.add('hidden');
-                indicator.classList.remove('flex');
-            }
-            const chatBox = document.getElementById('chat-box');
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        function escapeHTML(str) {
-            return str.replace(/[&<>'"]/g, 
-                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
-            );
-        }
-
-        function formatResponseText(text) {
-            return text
-                .replace(/\n\n/g, '<br><br>')
-                .replace(/\n/g, '<br>')
-                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-blue-900 bg-sky-50 px-1 rounded-md border border-sky-200">$1</strong>');
-        }
-
-        /* Smart Counseling Fallback Engine with Follow-up Questioning */
-        function generateSmartFallbackResponse(msg) {
-            if (msg.includes("친구") || msg.includes("우정") || msg.includes("싸움") || msg.includes("소외")) {
-                return `그런 일이 있었구나. 친구와의 문제는 마음을 가장 아프게 만드는 것 같아. 속상했을 네 마음이 너무 이해돼. 💙<br><br>
-                <strong>💡 곰돌이의 작은 권유:</strong><br>
-                1. 일단 마음이 가라앉을 때까지 너 자신에게 휴식을 줘봐.<br>
-                2. "너 왜 그랬어?" 대신 "나는 그때 조금 마음이 서운했어"라고 내 마음을 편하게 전해보는 건 어떨까?<br><br>
-                <strong>❓ 곰돌이의 질문:</strong><br>
-                그 친구와의 일 중 네 마음을 가장 아프게 했던 순간이나 계기가 어떤 거였는지 곰돌이에게 조금만 더 말해줄래? 🌱`;
-            } else if (msg.includes("성적") || msg.includes("시험") || msg.includes("공부")) {
-                return `시험과 성적 때문에 마음 부담이 많이 컸겠구나. 노력만큼 결과가 나오지 않을 때 제일 답답하지. 💙<br><br>
-                <strong>💡 곰돌이의 작은 권유:</strong><br>
-                1. 너무 큰 목표보다는 오늘 딱 20분씩만 집중해 보는 작은 계획을 세워보자.<br>
-                2. 공부 후엔 네가 좋아하는 간식을 먹으며 수고한 자신을 다독여줘.<br><br>
-                <strong>❓ 곰돌이의 질문:</strong><br>
-                요즘 공부할 때 너를 가장 불안하고 힘들게 만드는 부분은 무엇이니? 🌱`;
-            } else if (msg.includes("진로") || msg.includes("미래") || msg.includes("꿈")) {
-                return `미래나 진로에 대한 고민이 들기 시작했구나! 고민하고 있다는 것만으로도 넌 이미 성장하고 있는 거란다. 🧭<br><br>
-                <strong>💡 곰돌이의 작은 권유:</strong><br>
-                지금 당장 모든 걸 결정하지 않아도 괜찮아. 이번 주엔 네가 할 때 제일 재미있는 관심사 목록을 써보는 건 어떨까?<br><br>
-                <strong>❓ 곰돌이의 질문:</strong><br>
-                아주 작더라도 평소 해보고 싶거나 관심 가는 분야가 조금이라도 있니? 🌱`;
-            } else {
-                return `속상한 이야기를 솔직하게 들려줘서 정말 고마워. 마음속 고민을 털어놓은 것만으로도 용기 있는 첫걸음이야! 💙<br><br>
-                <strong>💡 곰돌이의 작은 권유:</strong><br>
-                오늘 밤은 너무 걱정하지 말고, 좋아해 주는 음악을 들으며 지친 마음을 토닥여주자.<br><br>
-                <strong>❓ 곰돌이의 질문:</strong><br>
-                이 상황 때문에 일상에서 가장 크게 부담되는 점이 무엇인지 곰돌이에게 더 이야기해줄래? 🌱`;
-            }
-        }
-    </script>
 </body>
 </html>
