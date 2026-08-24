@@ -129,19 +129,46 @@
 </head>
 <body class="min-h-screen pb-10">
 
-  <header class="sticky top-0 z-30 backdrop-blur bg-[#EEF3FBee] border-b border-[var(--paper-edge)]">
-    <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center gap-3 flex-wrap">
-      <div class="flex items-center gap-2.5 mr-2">
+  <!-- 좌측 주제 선택 드로어 (모바일/터치 환경 우수 지원) -->
+  <div id="drawerOverlay" class="fixed inset-0 bg-black/40 z-40 hidden opacity-0 transition-opacity duration-200"></div>
+  <aside id="topicDrawer" class="fixed top-0 left-0 bottom-0 w-72 max-w-[80vw] bg-white z-50 shadow-2xl transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col p-5 border-r border-[var(--paper-edge)]">
+    <div class="flex items-center justify-between pb-4 border-b border-[var(--paper-edge)] mb-4">
+      <div class="flex items-center gap-2.5">
         <div class="w-9 h-9 rounded-xl bg-[var(--ink)] text-white flex items-center justify-center flex-shrink-0">
           <i data-lucide="compass" class="w-5 h-5"></i>
         </div>
-        <div class="leading-tight">
-          <h1 class="font-display font-700 text-[15px] tracking-tight">도형 증명 실험실</h1>
+        <div>
+          <h2 class="font-display font-700 text-[15px]">증명 주제 선택</h2>
           <p class="text-[11px] text-[var(--ink-faint)] font-mono">중2 기하 · 삼각형의 합동</p>
         </div>
       </div>
-      <nav id="tabNav" class="flex items-center gap-1.5 overflow-x-auto flex-1 min-w-0"></nav>
-      <div class="flex items-center gap-2">
+      <button id="closeDrawerBtn" class="p-1.5 rounded-lg text-[var(--ink-soft)] hover:bg-slate-100 focus-ring" title="닫기">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+    <nav id="drawerNav" class="flex flex-col gap-2 flex-1 overflow-y-auto"></nav>
+    <div class="pt-4 border-t border-[var(--paper-edge)] text-[11px] text-[var(--ink-faint)] font-mono text-center">
+      도형 증명 실험실 · 모바일 최적화
+    </div>
+  </aside>
+
+  <header class="sticky top-0 z-30 backdrop-blur bg-[#EEF3FBee] border-b border-[var(--paper-edge)]">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center gap-3 flex-wrap">
+      <button id="topicMenuBtn" class="flex items-center gap-2.5 hover:opacity-80 transition-opacity focus-ring rounded-xl p-1 -ml-1 text-left" title="증명 주제 선택 (나침반 클릭)">
+        <div class="w-9 h-9 rounded-xl bg-[var(--ink)] text-white flex items-center justify-center flex-shrink-0 shadow-sm relative">
+          <i data-lucide="compass" class="w-5 h-5"></i>
+          <span class="absolute -top-1 -right-1 w-3 h-3 bg-[var(--teal)] rounded-full border-2 border-white"></span>
+        </div>
+        <div class="leading-tight">
+          <div class="flex items-center gap-1">
+            <h1 class="font-display font-700 text-[15px] tracking-tight">도형 증명 실험실</h1>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-[var(--ink-soft)]"></i>
+          </div>
+          <p class="text-[11px] text-[var(--teal-dark)] font-mono font-600" id="currentTopicLabel">이등변삼각형의 성질</p>
+        </div>
+      </button>
+      <nav id="tabNav" class="hidden md:flex items-center gap-1.5 overflow-x-auto flex-1 min-w-0"></nav>
+      <div class="flex items-center gap-2 ml-auto">
         <button id="prevStepBtn" class="tab-btn border border-[var(--paper-edge)] bg-white focus-ring text-[12px] py-2 px-3" title="이전 단계로 돌아가기">
           <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
           <span>이전 단계</span>
@@ -788,6 +815,10 @@ function initTab3(startStep = 1){
     gLeft.appendChild(labelDot(B,'B',{dx:-14,dy:8}));
     gLeft.appendChild(labelDot(C,'C(F)',{dx:0,dy:20}));
 
+    // 미리 각 B를 노란색 호로 선명하게 표시하여 학생들이 쉽게 비교하도록 유도
+    const preArcB = el('path',{d:arcPath(B.x,B.y,26, angleOf(B.x,B.y,C.x,C.y), angleOf(B.x,B.y,A.x,A.y)), stroke:'var(--amber)','stroke-width':3, fill:'none', class:'pulse-glow'});
+    gLeft.appendChild(preArcB);
+
     // 오른쪽 삼각형
     gRight.appendChild(lineEl(A,E_final)); gRight.appendChild(lineEl(E_final,C));
     gRight.appendChild(el('path',{d:rightAngleMark(C, angleOf(C.x,C.y,E_final.x,E_final.y), angleOf(C.x,C.y,A.x,A.y),14), stroke:'var(--ink)','stroke-width':2, fill:'none'}));
@@ -798,14 +829,13 @@ function initTab3(startStep = 1){
     const midLine = lineEl(A,C,{stroke:'var(--blue)','stroke-width':3});
     svg.appendChild(midLine);
 
-    setInstruction(2, '$\\triangle ABE$는 이등변삼각형입니다. 그림에서 <strong>$\\angle B$와 크기가 같은 각</strong>을 눌러보세요', '두 빗변($\\overline{AB}=\\overline{AE}$)의 길이가 같으므로 두 밑각의 크기가 같습니다.', '오른쪽 밑각인 점 $E$를 콕 눌러보세요.');
+    setInstruction(2, '$\\triangle ABE$는 이등변삼각형입니다. 그림에 표시된 **$\\angle B$와 크기가 같은 각**을 눌러보세요', '두 빗변($\\overline{AB}=\\overline{AE}$)의 길이가 같으므로 두 밑각의 크기가 같습니다.', '오른쪽 밑각인 점 $E$를 콕 눌러보세요.');
 
     const targetE = el('circle',{cx:E_final.x, cy:E_final.y, r:22, fill:'transparent', class:'clickable-target focus-ring'});
     svg.appendChild(targetE);
 
     targetE.addEventListener('pointerdown', ()=>{
       targetE.remove();
-      svg.appendChild(el('path',{d:arcPath(B.x,B.y,26, angleOf(B.x,B.y,C.x,C.y), angleOf(B.x,B.y,A.x,A.y)), stroke:'var(--amber)','stroke-width':2.5, fill:'none', class:'pulse-glow'}));
       svg.appendChild(el('path',{d:arcPath(E_final.x,E_final.y,26, angleOf(E_final.x,E_final.y,A.x,A.y), angleOf(E_final.x,E_final.y,C.x,C.y)), stroke:'var(--amber)','stroke-width':2.5, fill:'none', class:'pulse-glow'}));
       addProofLine(2, '$\\angle B = \\angle E$', '이등변삼각형의 두 밑각의 크기는 같습니다');
       markStepDone();
@@ -817,12 +847,15 @@ function initTab3(startStep = 1){
     removeProofLinesFrom(3);
     setInstruction(3, '직각삼각형의 성질에 의해 <strong>$\\angle BAC$와 크기가 같은 위쪽 각</strong>을 눌러보세요', '두 삼각형 모두 $90^\\circ - (밑각)$ 이므로 꼭지각의 크기도 서로 같습니다.', '위쪽 꼭짓점 $A(D)$ 주변의 오른쪽 각 영역을 눌러보세요.');
 
+    // 미리 \angle BAC를 보라색 호로 선명하게 표시하여 쉽게 비교하도록 유도
+    const preArcBAC = el('path',{d:arcPath(A.x,A.y,26, angleOf(A.x,A.y,B.x,B.y), angleOf(A.x,A.y,C.x,C.y)), stroke:'var(--violet)','stroke-width':3, fill:'none', class:'pulse-glow'});
+    svg.appendChild(preArcBAC);
+
     const targetA = el('circle',{cx:A.x + 15, cy:A.y + 20, r:20, fill:'transparent', class:'clickable-target focus-ring'});
     svg.appendChild(targetA);
 
     targetA.addEventListener('pointerdown', ()=>{
       targetA.remove();
-      svg.appendChild(el('path',{d:arcPath(A.x,A.y,26, angleOf(A.x,A.y,B.x,B.y), angleOf(A.x,A.y,C.x,C.y)), stroke:'var(--violet)','stroke-width':2.5, fill:'none', class:'pulse-glow'}));
       svg.appendChild(el('path',{d:arcPath(A.x,A.y,26, angleOf(A.x,A.y,C.x,C.y), angleOf(A.x,A.y,E_final.x,E_final.y)), stroke:'var(--violet)','stroke-width':2.5, fill:'none', class:'pulse-glow'}));
       addProofLine(3, '$\\angle BAC = \\angle EDF$ (나머지 각)', '두 직각삼각형의 모든 세 각의 크기가 서로 같습니다');
       markStepDone();
@@ -952,15 +985,72 @@ const TABS = [
 ];
 
 const tabNav = document.getElementById('tabNav');
+const drawerNav = document.getElementById('drawerNav');
+const drawerOverlay = document.getElementById('drawerOverlay');
+const topicDrawer = document.getElementById('topicDrawer');
+const topicMenuBtn = document.getElementById('topicMenuBtn');
+const closeDrawerBtn = document.getElementById('closeDrawerBtn');
+const currentTopicLabel = document.getElementById('currentTopicLabel');
+
+function openDrawer(){
+  if (!drawerOverlay || !topicDrawer) return;
+  drawerOverlay.classList.remove('hidden');
+  setTimeout(() => {
+    drawerOverlay.classList.remove('opacity-0');
+    topicDrawer.classList.remove('-translate-x-full');
+  }, 10);
+}
+
+function closeDrawer(){
+  if (!drawerOverlay || !topicDrawer) return;
+  drawerOverlay.classList.add('opacity-0');
+  topicDrawer.classList.add('-translate-x-full');
+  setTimeout(() => {
+    drawerOverlay.classList.add('hidden');
+  }, 300);
+}
+
+if(topicMenuBtn) topicMenuBtn.addEventListener('click', openDrawer);
+if(closeDrawerBtn) closeDrawerBtn.addEventListener('click', closeDrawer);
+if(drawerOverlay) drawerOverlay.addEventListener('click', closeDrawer);
+
 function renderTabNav(){
-  tabNav.innerHTML = '';
+  if(tabNav) tabNav.innerHTML = '';
+  if(drawerNav) drawerNav.innerHTML = '';
+
   TABS.forEach(t => {
-    const b = document.createElement('button');
-    b.className = 'tab-btn focus-ring' + (t.id === currentTab ? ' active' : '');
-    b.innerHTML = `<i data-lucide="${t.icon}" class="w-4 h-4"></i><span>${t.label}</span>`;
-    b.addEventListener('click', () => switchTab(t.id));
-    tabNav.appendChild(b);
+    // 상단 데스크톱 탭
+    if(tabNav){
+      const b = document.createElement('button');
+      b.className = 'tab-btn focus-ring' + (t.id === currentTab ? ' active' : '');
+      b.innerHTML = `<i data-lucide="${t.icon}" class="w-4 h-4"></i><span>${t.label}</span>`;
+      b.addEventListener('click', () => switchTab(t.id));
+      tabNav.appendChild(b);
+    }
+
+    // 좌측 슬라이드 드로어 메뉴 (모바일 스마트폰 최적화)
+    if(drawerNav){
+      const db = document.createElement('button');
+      db.className = 'flex items-center gap-3 p-3 rounded-xl font-600 text-[14px] text-left transition-all ' + 
+        (t.id === currentTab ? 'bg-[var(--ink)] text-white shadow-md' : 'bg-slate-50 hover:bg-slate-100 text-[var(--ink)]');
+      db.innerHTML = `
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center ${t.id === currentTab ? 'bg-white/20 text-white' : 'bg-white border border-[var(--paper-edge)] text-[var(--teal-dark)]'}">
+          <i data-lucide="${t.icon}" class="w-4 h-4"></i>
+        </div>
+        <span>${t.label}</span>
+      `;
+      db.addEventListener('click', () => {
+        switchTab(t.id);
+        closeDrawer();
+      });
+      drawerNav.appendChild(db);
+    }
   });
+
+  const cur = TABS.find(t => t.id === currentTab);
+  if (cur && currentTopicLabel) {
+    currentTopicLabel.textContent = cur.label;
+  }
   lucide.createIcons();
 }
 
