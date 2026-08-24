@@ -129,7 +129,7 @@
 </head>
 <body class="min-h-screen pb-10">
 
-  <!-- 좌측 주제 선택 드로어 (모바일/터치 환경 우수 지원) -->
+  <!-- 좌측 주제 선택 드로어 (모바일/터치 환경 최적 지원) -->
   <div id="drawerOverlay" class="fixed inset-0 bg-black/40 z-40 hidden opacity-0 transition-opacity duration-200"></div>
   <aside id="topicDrawer" class="fixed top-0 left-0 bottom-0 w-72 max-w-[80vw] bg-white z-50 shadow-2xl transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col p-5 border-r border-[var(--paper-edge)]">
     <div class="flex items-center justify-between pb-4 border-b border-[var(--paper-edge)] mb-4">
@@ -148,13 +148,14 @@
     </div>
     <nav id="drawerNav" class="flex flex-col gap-2 flex-1 overflow-y-auto"></nav>
     <div class="pt-4 border-t border-[var(--paper-edge)] text-[11px] text-[var(--ink-faint)] font-mono text-center">
-      도형 증명 실험실 · 모바일 최적화
+      도형 증명 실험실 · 인터랙티브 기하
     </div>
   </aside>
 
+  <!-- 상단 네비게이션 헤더 -->
   <header class="sticky top-0 z-30 backdrop-blur bg-[#EEF3FBee] border-b border-[var(--paper-edge)]">
     <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center gap-3 flex-wrap">
-      <button id="topicMenuBtn" class="flex items-center gap-2.5 hover:opacity-80 transition-opacity focus-ring rounded-xl p-1 -ml-1 text-left" title="증명 주제 선택 (나침반 클릭)">
+      <button id="topicMenuBtn" class="flex items-center gap-2.5 hover:opacity-80 transition-opacity focus-ring rounded-xl p-1 -ml-1 text-left" title="증명 주제 선택">
         <div class="w-9 h-9 rounded-xl bg-[var(--ink)] text-white flex items-center justify-center flex-shrink-0 shadow-sm relative">
           <i data-lucide="compass" class="w-5 h-5"></i>
           <span class="absolute -top-1 -right-1 w-3 h-3 bg-[var(--teal)] rounded-full border-2 border-white"></span>
@@ -181,7 +182,9 @@
     </div>
   </header>
 
+  <!-- 메인 증명 인터페이스 -->
   <main class="max-w-7xl mx-auto px-4 md:px-6 pt-5">
+    <!-- 단계 안내 패널 -->
     <div class="paper px-4 md:px-5 py-3.5 mb-4 flex items-start gap-3.5">
       <div id="stepBadge" class="dim-badge active mt-0.5">1</div>
       <div class="flex-1 min-w-0">
@@ -194,10 +197,12 @@
       </button>
     </div>
 
+    <!-- 힌트 상자 -->
     <div id="hintPanel" class="rounded-xl px-4 py-3 mb-4 text-[13px] leading-relaxed hidden bg-[#FFF7E8] border border-[#F0DBA6] text-[#B9790E]"></div>
 
+    <!-- Canvas & 증명 노트 레이아웃 -->
     <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,1fr)] gap-4">
-      <div class="paper p-3 md:p-4 flex items-center justify-center relative">
+      <div class="paper p-3 md:p-4 flex items-center justify-center relative min-h-[380px]">
         <svg id="canvas" viewBox="0 0 640 460" class="w-full h-auto touch-none select-none" style="max-height: 72vh;"></svg>
       </div>
 
@@ -206,7 +211,7 @@
           <i data-lucide="scroll-text" class="w-4 h-4"></i>
           <h2 class="font-display font-600 text-[13px] tracking-wide uppercase">증명 노트</h2>
         </div>
-        <div id="proofPanel" class="flex flex-col gap-2 flex-1"></div>
+        <div id="proofPanel" class="flex flex-col gap-2 flex-1 overflow-y-auto max-h-[420px] pr-1"></div>
         <div id="conclusionBox" class="hidden mt-3 rounded-xl border-2 border-[var(--teal)] bg-[#F0FBFA] px-4 py-3 pop-in">
           <div class="flex items-center gap-2 text-[var(--teal-dark)] mb-1">
             <i data-lucide="badge-check" class="w-4 h-4"></i>
@@ -220,19 +225,23 @@
 
 <script>
 const SVGNS = "http://www.w3.org/2000/svg";
+
 function el(tag, attrs = {}, ...children){
   const node = document.createElementNS(SVGNS, tag);
   for (const k in attrs) node.setAttribute(k, attrs[k]);
   children.forEach(c => node.appendChild(c));
   return node;
 }
+
 function polar(cx, cy, r, deg){
   const rad = deg * Math.PI / 180;
   return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
 }
+
 function angleOf(cx, cy, px, py){
   return Math.atan2(py - cy, px - cx) * 180 / Math.PI;
 }
+
 function dist(a, b){ return Math.hypot(a.x - b.x, a.y - b.y); }
 function mid(a, b){ return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; }
 function norm(deg){ let d = deg % 360; if (d < 0) d += 360; return d; }
@@ -244,12 +253,14 @@ function arcPath(cx, cy, r, a1, a2){
   const p2 = polar(cx, cy, r, a2);
   return `M ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} A ${r} ${r} 0 0 ${sweep} ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
 }
+
 function rightAngleMark(V, a1, a2, size = 16){
   const p1 = polar(V.x, V.y, size, a1);
   const corner = polar(p1.x, p1.y, size, a2);
   const p2 = polar(V.x, V.y, size, a2);
   return `M ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} L ${corner.x.toFixed(2)} ${corner.y.toFixed(2)} L ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
 }
+
 function tickMarks(p1, p2, count, color){
   const g = el("g");
   const m = mid(p1, p2);
@@ -266,6 +277,7 @@ function tickMarks(p1, p2, count, color){
   }
   return g;
 }
+
 function labelDot(p, text, opts = {}){
   const g = el("g");
   const dx = opts.dx ?? 0, dy = opts.dy ?? -14;
@@ -273,14 +285,17 @@ function labelDot(p, text, opts = {}){
   g.appendChild(el("text", { x:p.x + dx, y:p.y + dy, "font-size": opts.fontSize ?? 16, "font-weight": 600, fill: opts.textColor ?? "var(--ink)", "text-anchor":"middle" }, document.createTextNode(text)));
   return g;
 }
+
 function svgPoint(svg, evt){
   const pt = svg.createSVGPoint();
   pt.x = evt.clientX; pt.y = evt.clientY;
   return pt.matrixTransform(svg.getScreenCTM().inverse());
 }
+
 function lineEl(p1, p2, attrs = {}){
   return el("line", Object.assign({ x1:p1.x, y1:p1.y, x2:p2.x, y2:p2.y, stroke:"var(--ink)", "stroke-width":2.5, "stroke-linecap":"round" }, attrs));
 }
+
 function pointOnSegment(p1, p2, t){ return { x: p1.x + (p2.x - p1.x) * t, y: p1.y + (p2.y - p1.y) * t }; }
 
 const svg = document.getElementById('canvas');
@@ -412,6 +427,9 @@ function buildQuiz(container, question, options, correctCheck, onCorrect){
   return wrap;
 }
 
+/* ==========================================================================
+   Tab 1: 이등변삼각형의 성질 (두 밑각의 크기가 같다 / 꼭짓각의 이등분선)
+   ========================================================================== */
 function initTab1(startStep = 1){
   clearCanvas(); clearProof();
   const A = {x:320,y:64}, B = {x:150,y:380}, C = {x:490,y:380};
@@ -424,8 +442,6 @@ function initTab1(startStep = 1){
   const gRight = el('g');
   mainGroup.appendChild(gLeft);
   mainGroup.appendChild(gRight);
-
-  let arcB_el = null, arcC_el = null;
 
   function renderBaseTriangle(){
     gLeft.innerHTML = ''; gRight.innerHTML = '';
@@ -454,12 +470,12 @@ function initTab1(startStep = 1){
     svg.appendChild(guideDots);
     [0.25, 0.5, 0.75].forEach(t => {
       const p = pointOnSegment(B,C,t);
-      guideDots.appendChild(el('circle',{cx:p.x,cy:p.y,r:5,fill:'var(--paper-edge)'}));
+      guideDots.appendChild(el('circle',{cx:p.x,cy:p.y,r:6,fill:'var(--teal)', opacity: t===0.5?1:0.3}));
     });
 
     function pickMid(pt){
       const t = (pt.x - B.x) / (C.x - B.x);
-      if (Math.abs(t - 0.5) < 0.1){
+      if (Math.abs(t - 0.5) < 0.12){
         guideDots.remove(); zone.remove();
         addProofLine(1, '$\\overline{BD} = \\overline{CD}$', '밑변의 중점 $D$를 잡았습니다');
         markStepDone();
@@ -474,21 +490,21 @@ function initTab1(startStep = 1){
   function step2(){
     removeProofLinesFrom(2);
     renderBaseTriangle();
-    gLeft.appendChild(tickMarks(B,D,1,'var(--orange)'));
-    gRight.appendChild(tickMarks(D,C,1,'var(--orange)'));
+    gLeft.appendChild(tickMarks(B,D,2,'var(--orange)'));
+    gRight.appendChild(tickMarks(D,C,2,'var(--orange)'));
     gLeft.appendChild(labelDot(D,'D',{dx:-10,dy:22}));
     gRight.appendChild(labelDot(D,'D',{dx:10,dy:22}));
 
     setInstruction(2, '꼭짓점 $A$를 잡고 점 $D$까지 <strong>선을 쭉 그어보세요</strong>', '위쪽 꼭짓점 $A$에서 아래 중점 $D$로 보조선을 연결합니다.', '파란 원을 누른 채로 아래 점 $D$까지 끌어당기세요.');
     
-    const handle = el('circle',{cx:A.x,cy:A.y,r:11,fill:'var(--teal)',opacity:0.85,class:'grabbable'});
+    const handle = el('circle',{cx:A.x,cy:A.y,r:12,fill:'var(--teal)',opacity:0.85,class:'grabbable'});
     svg.appendChild(handle);
     let dragLine = null, dragging = false;
 
     handle.addEventListener('pointerdown', (e)=>{
       dragging = true;
       handle.setPointerCapture(e.pointerId);
-      dragLine = lineEl(A,A,{stroke:'var(--violet)','stroke-dasharray':'5 5'});
+      dragLine = lineEl(A,A,{stroke:'var(--violet)','stroke-dasharray':'5 5','stroke-width':3});
       svg.insertBefore(dragLine, handle);
     });
     handle.addEventListener('pointermove', (e)=>{
@@ -499,10 +515,10 @@ function initTab1(startStep = 1){
     handle.addEventListener('pointerup', (e)=>{
       dragging = false;
       const p = svgPoint(svg,e);
-      if (dist(p, D) < 35){
+      if (dist(p, D) < 40){
         dragLine.remove(); handle.remove();
-        gLeft.appendChild(lineEl(A,D,{stroke:'var(--violet)'}));
-        gRight.appendChild(lineEl(A,D,{stroke:'var(--violet)'}));
+        gLeft.appendChild(lineEl(A,D,{stroke:'var(--violet)','stroke-width':3}));
+        gRight.appendChild(lineEl(A,D,{stroke:'var(--violet)','stroke-width':3}));
         addProofLine(2, '$\\overline{AD}$는 공통', '보조선 $AD$를 그어 두 개의 삼각형으로 나누었습니다');
         markStepDone();
         step3();
@@ -516,11 +532,11 @@ function initTab1(startStep = 1){
   function step3(){
     removeProofLinesFrom(3);
     renderBaseTriangle();
-    gLeft.appendChild(tickMarks(B,D,1,'var(--orange)')); gRight.appendChild(tickMarks(D,C,1,'var(--orange)'));
-    gLeft.appendChild(lineEl(A,D,{stroke:'var(--violet)'})); gRight.appendChild(lineEl(A,D,{stroke:'var(--violet)'}));
+    gLeft.appendChild(tickMarks(B,D,2,'var(--orange)')); gRight.appendChild(tickMarks(D,C,2,'var(--orange)'));
+    gLeft.appendChild(lineEl(A,D,{stroke:'var(--violet)','stroke-width':3})); gRight.appendChild(lineEl(A,D,{stroke:'var(--violet)','stroke-width':3}));
     gLeft.appendChild(labelDot(D,'D',{dx:-10,dy:22})); gRight.appendChild(labelDot(D,'D',{dx:10,dy:22}));
 
-    setInstruction(3, '슬라이더를 오른쪽으로 밀어 <strong>두 삼각형을 벌려보세요</strong>', '두 삼각형의 세 변이 각각 같은지 직접 눈으로 비교합니다.', '슬라이더를 끝까지 밀면 두 삼각형이 분리되며 서로 같은 변이 명확히 보입니다.');
+    setInstruction(3, '슬라이더를 오른쪽으로 밀어 <strong>두 삼각형을 분리해보세요</strong>', '두 삼각형의 세 변이 각각 같은지 직접 눈으로 비교합니다.', '슬라이더를 끝까지 밀면 두 삼각형이 분리되며 서로 대응하는 변이 명확히 보입니다.');
 
     const sliderFO = el('foreignObject',{x:170, y:415, width:300, height:40});
     sliderFO.innerHTML = `<input type="range" min="0" max="100" value="0" style="width:100%" class="focus-ring" id="splitSlider">`;
@@ -555,17 +571,10 @@ function initTab1(startStep = 1){
 
   function step4(){
     removeProofLinesFrom(4);
-    setInstruction(4, '두 삼각형 $\\triangle ABD$와 $\\triangle ACD$의 <strong>합동 조건</strong>은 무엇일까요?', '세 변의 길이가 각각 같을 때 사용하는 조건입니다.', '세 변(Side)이 같으므로 SSS 합동입니다.');
-    
-    buildQuiz(proofPanel, '$\\triangle ABD \\equiv \\triangle ACD$ 합동 조건은?', ['SSS','SAS','ASA','RHS'], 0, ()=>{
-      addProofLine(4, '$\\triangle ABD \\equiv \\triangle ACD$ (SSS 합동)', '합동인 두 도형은 대응각의 크기가 서로 같습니다');
-      
-      // 분리된 각 삼각형 내부 좌표계에 호를 배치하여 위치 어긋남 방지
-      arcB_el = el('path', {d: arcPath(B.x,B.y,26, angleOf(B.x,B.y,D.x,D.y), angleOf(B.x,B.y,A.x,A.y)), stroke:'var(--amber)', 'stroke-width':3, fill:'none', class:'pulse-glow'});
-      arcC_el = el('path', {d: arcPath(C.x,C.y,26, angleOf(C.x,C.y,A.x,A.y), angleOf(C.x,C.y,D.x,D.y)), stroke:'var(--amber)', 'stroke-width':3, fill:'none', class:'pulse-glow'});
-      gLeft.appendChild(arcB_el);
-      gRight.appendChild(arcC_el);
+    setInstruction(4, '두 삼각형의 합동 조건과 결론을 선택해주세요', '발견한 세 변의 관계를 바탕으로 알맞은 합동 조건을 고르세요.', 'SSS 합동에 의해 두 밑각 $\\angle B$와 $\\angle C$의 크기가 같습니다.');
 
+    buildQuiz(proofPanel, '$\\triangle ABD \\equiv \\triangle ACD$ 정당화 조건 선택:', ['SSS 합동','SAS 합동','ASA 합동'], 0, ()=>{
+      addProofLine(4, '$\\triangle ABD \\equiv \\triangle ACD$ (SSS 합동)', '세 대응변의 길이가 각각 같으므로 두 삼각형은 합동입니다');
       showConclusion('$\\angle B = \\angle C$ (이등변삼각형의 두 밑각의 크기는 같다)');
       markStepDone();
     });
@@ -575,313 +584,158 @@ function initTab1(startStep = 1){
   stepHistory[startStep - 1]();
 }
 
+/* ==========================================================================
+   Tab 2: 이등변삼각형이 되는 조건 (두 내각의 크기가 같은 삼각형)
+   ========================================================================== */
 function initTab2(startStep = 1){
   clearCanvas(); clearProof();
-  const A = {x:320,y:64}, B = {x:150,y:380}, C = {x:490,y:380};
-  const D = mid(B,C);
+  const A = {x:320,y:70}, B = {x:140,y:370}, C = {x:500,y:370};
+  const D = {x:320,y:370};
 
-  const gTri = el('g');
-  svg.appendChild(gTri);
+  const g = el('g');
+  svg.appendChild(g);
 
-  function renderBase(){
-    gTri.innerHTML = '';
-    gTri.appendChild(lineEl(A,B)); gTri.appendChild(lineEl(A,C)); gTri.appendChild(lineEl(B,C));
-    gTri.appendChild(el('path',{d:arcPath(B.x,B.y,24, angleOf(B.x,B.y,C.x,C.y), angleOf(B.x,B.y,A.x,A.y)), stroke:'var(--blue)','stroke-width':2.5, fill:'none'}));
-    gTri.appendChild(el('path',{d:arcPath(C.x,C.y,24, angleOf(C.x,C.y,A.x,A.y), angleOf(C.x,C.y,B.x,B.y)), stroke:'var(--blue)','stroke-width':2.5, fill:'none'}));
-    gTri.appendChild(labelDot(A,'A',{dy:-12}));
-    gTri.appendChild(labelDot(B,'B',{dx:-14,dy:6}));
-    gTri.appendChild(labelDot(C,'C',{dx:14,dy:6}));
+  function drawTriangle(){
+    g.innerHTML = '';
+    g.appendChild(lineEl(A,B)); g.appendChild(lineEl(B,C)); g.appendChild(lineEl(C,A));
+    g.appendChild(labelDot(A,'A',{dy:-12}));
+    g.appendChild(labelDot(B,'B',{dx:-14,dy:8}));
+    g.appendChild(labelDot(C,'C',{dx:14,dy:8}));
+    
+    // 각 B, 각 C 같은 각 표시
+    const aB = arcPath(B.x,B.y, 30, angleOf(B.x,B.y,C.x,C.y), angleOf(B.x,B.y,A.x,A.y));
+    const aC = arcPath(C.x,C.y, 30, angleOf(C.x,C.y,A.x,A.y), angleOf(C.x,C.y,B.x,B.y));
+    g.appendChild(el('path',{d:aB, stroke:'var(--teal)','stroke-width':3, fill:'none'}));
+    g.appendChild(el('path',{d:aC, stroke:'var(--teal)','stroke-width':3, fill:'none'}));
   }
 
   function step1(){
     removeProofLinesFrom(1);
-    renderBase();
-    setInstruction(1, '슬라이더를 조절해 <strong>$\\angle A$를 반으로 똑같이 나누는 선</strong>을 그어보세요', '$\\angle BAD = \\angle CAD$가 되도록 슬라이더를 정가운데로 맞춰보세요.', '슬라이더를 50 위치로 맞추면 꼭지각을 이등분합니다.');
+    drawTriangle();
+    setInstruction(1, '꼭짓각 $A$의 <strong>이등분선 $AD$</strong>를 그어보세요', '각 $A$를 반으로 나누는 선분을 클릭하여 밑변 $BC$로 연결합니다.', '꼭짓점 A 근처의 원을 클릭하면 각 $A$의 이등분선 $AD$가 그어집니다.');
 
-    const sliderFO = el('foreignObject',{x:170,y:150,width:300,height:40});
-    sliderFO.innerHTML = `<input type="range" min="0" max="100" value="20" style="width:100%" class="focus-ring" id="bisectSlider">`;
-    svg.appendChild(sliderFO);
-    const slider = sliderFO.querySelector('#bisectSlider');
+    const target = el('circle',{cx:A.x, cy:A.y+15, r:18, fill:'var(--violet)', opacity:0.3, class:'clickable-target focus-ring', tabindex:0});
+    g.appendChild(target);
 
-    const dragLine = lineEl(A, pointOnSegment(B,C, 0.2), {stroke:'var(--violet)', 'stroke-width':2.5, 'stroke-dasharray':'6 4'});
-    svg.appendChild(dragLine);
-    const previewDot = el('circle', {cx:pointOnSegment(B,C,0.2).x, cy:pointOnSegment(B,C,0.2).y, r:6, fill:'var(--violet)'});
-    svg.appendChild(previewDot);
+    target.addEventListener('click', ()=>{
+      target.remove();
+      g.appendChild(lineEl(A,D,{stroke:'var(--violet)','stroke-width':2.5,'stroke-dasharray':'4 4'}));
+      g.appendChild(labelDot(D,'D',{dy:20}));
+      
+      // 각 BAD, CAD 표시
+      const a1 = arcPath(A.x,A.y,28, angleOf(A.x,A.y,B.x,B.y), angleOf(A.x,A.y,D.x,D.y));
+      const a2 = arcPath(A.x,A.y,28, angleOf(A.x,A.y,D.x,D.y), angleOf(A.x,A.y,C.x,C.y));
+      g.appendChild(el('path',{d:a1, stroke:'var(--amber)','stroke-width':2.5, fill:'none'}));
+      g.appendChild(el('path',{d:a2, stroke:'var(--amber)','stroke-width':2.5, fill:'none'}));
 
-    slider.addEventListener('input', ()=>{
-      const p = pointOnSegment(B,C, slider.value/100);
-      dragLine.setAttribute('x2', p.x); dragLine.setAttribute('y2', p.y);
-      previewDot.setAttribute('cx', p.x); previewDot.setAttribute('cy', p.y);
-    });
-
-    const confirmFO = el('foreignObject',{x:250,y:395,width:140,height:40});
-    confirmFO.innerHTML = `<button id="bisectConfirm" class="quiz-btn focus-ring" style="width:100%">이 각도로 확정</button>`;
-    svg.appendChild(confirmFO);
-
-    confirmFO.querySelector('#bisectConfirm').addEventListener('click', ()=>{
-      const t = slider.value/100;
-      if (Math.abs(t - 0.5) < 0.06){
-        sliderFO.remove(); confirmFO.remove(); dragLine.remove(); previewDot.remove();
-        addProofLine(1, '$\\angle BAD = \\angle CAD$', '꼭지각 $\\angle A$의 이등분선을 그었습니다');
-        markStepDone();
-        step2();
-      } else {
-        shakeEl(dragLine);
-      }
+      addProofLine(1, '$\\angle BAD = \\angle CAD$', '꼭짓각 $A$의 이등분선 $AD$를 그었습니다');
+      markStepDone();
+      step2();
     });
   }
 
   function step2(){
     removeProofLinesFrom(2);
-    renderBase();
-    gTri.appendChild(lineEl(A,D,{stroke:'var(--violet)'}));
-    gTri.appendChild(labelDot(D,'D',{dx:0,dy:22}));
-    const a1 = angleOf(A.x,A.y,B.x,B.y), a2 = angleOf(A.x,A.y,D.x,D.y), a3 = angleOf(A.x,A.y,C.x,C.y);
-    gTri.appendChild(el('path',{d:arcPath(A.x,A.y,22,a1,a2), stroke:'var(--orange)','stroke-width':2.5, fill:'none'}));
-    gTri.appendChild(el('path',{d:arcPath(A.x,A.y,22,a2,a3), stroke:'var(--orange)','stroke-width':2.5, fill:'none'}));
+    setInstruction(2, '삼각형의 세 내각의 합($180^\\circ$)을 이용하여 <strong>$\\angle ADB$와 $\\angle ADC$</strong> 관계를 밝혀보세요', '$\\angle B = \\angle C$ 이고 $\\angle BAD = \\angle CAD$ 이므로 나머지 한 각도 서로 같습니다.', '질문에 답하면 단계가 진행됩니다.');
 
-    setInstruction(2, '슬라이더를 움직여 <strong>$\\angle ADB$의 크기가 $90^\\circ$</strong>가 되는지 확인해보세요', '그림 위의 실시간 각도 표시를 보며 직각이 되는 지점을 맞춰보세요.', '슬라이더를 $90^\\circ$ 위치로 맞추면 수직이 됨을 확인할 수 있습니다.');
-
-    // 캔버스 상 실시간 각도 표시용 그룹
-    const dynAngleG = el('g');
-    svg.appendChild(dynAngleG);
-
-    const sliderFO = el('foreignObject',{x:170,y:140,width:300,height:56});
-    sliderFO.innerHTML = `
-      <div style="background:white; padding:8px 12px; border-radius:10px; border:1px solid var(--paper-edge); text-align:center;">
-        <input type="range" min="60" max="120" value="78" style="width:100%" class="focus-ring" id="adbSlider">
-        <p class="text-[12px] font-mono mt-1" style="color:var(--ink-soft)">조절 중: $\\angle ADB = $ <span id="valTxt" class="font-bold text-[var(--teal-dark)]">78°</span></p>
-      </div>`;
-    svg.appendChild(sliderFO);
-    const slider = sliderFO.querySelector('#adbSlider');
-    const valTxt = sliderFO.querySelector('#valTxt');
-
-    function updateAngles(deg){
-      valTxt.textContent = `${deg}°`;
-      dynAngleG.innerHTML = '';
-      const leftDeg = deg;
-      const rightDeg = 180 - deg;
-
-      if (deg === 90){
-        const a1 = angleOf(D.x,D.y,B.x,B.y), a2=angleOf(D.x,D.y,A.x,A.y), a3=angleOf(D.x,D.y,C.x,C.y);
-        dynAngleG.appendChild(el('path',{d:rightAngleMark(D,a2,a1,15), stroke:'var(--teal)','stroke-width':2.2, fill:'none'}));
-        dynAngleG.appendChild(el('path',{d:rightAngleMark(D,a3,a2,15), stroke:'var(--teal)','stroke-width':2.2, fill:'none'}));
-      } else {
-        dynAngleG.appendChild(el('path',{d:arcPath(D.x,D.y,24, 180, 180 + leftDeg), stroke:'var(--teal)','stroke-width':2.2, fill:'none'}));
-        dynAngleG.appendChild(el('path',{d:arcPath(D.x,D.y,24, 180 + leftDeg, 360), stroke:'var(--coral)','stroke-width':2.2, fill:'none'}));
-      }
-
-      // 캔버스 상 텍스트로 83°, 97° 등 수치 바로 띄우기
-      dynAngleG.appendChild(el('text',{x:D.x - 30, y:D.y - 12, 'font-size':13, 'font-weight':700, fill:'var(--teal-dark)', 'text-anchor':'middle'}, document.createTextNode(`${leftDeg}°`)));
-      dynAngleG.appendChild(el('text',{x:D.x + 30, y:D.y - 12, 'font-size':13, 'font-weight':700, fill:'var(--coral)', 'text-anchor':'middle'}, document.createTextNode(`${rightDeg}°`)));
-    }
-    slider.addEventListener('input', () => updateAngles(+slider.value));
-    updateAngles(78);
-
-    const okFO = el('foreignObject',{x:250,y:210,width:140,height:40});
-    okFO.innerHTML = `<button class="quiz-btn focus-ring" style="width:100%">확인</button>`;
-    svg.appendChild(okFO);
-
-    okFO.querySelector('button').addEventListener('click', ()=>{
-      if (+slider.value === 90){
-        sliderFO.remove(); okFO.remove(); dynAngleG.remove();
-        const a1 = angleOf(D.x,D.y,B.x,B.y), a2=angleOf(D.x,D.y,A.x,A.y), a3=angleOf(D.x,D.y,C.x,C.y);
-        gTri.appendChild(el('path',{d:rightAngleMark(D,a2,a1,14), stroke:'var(--teal)','stroke-width':2.2, fill:'none'}));
-        gTri.appendChild(el('path',{d:rightAngleMark(D,a3,a2,14), stroke:'var(--teal)','stroke-width':2.2, fill:'none'}));
-        addProofLine(2, '$\\angle ADB = \\angle ADC = 90^\\circ$', '삼각형 내각의 합($180^\\circ$)에 의해 양쪽 각은 모두 $90^\\circ$입니다');
-        markStepDone();
-        step3();
-      } else {
-        shakeEl(sliderFO);
-      }
+    buildQuiz(proofPanel, '$\\angle B=\\angle C$, $\\angle BAD=\\angle CAD$ 일 때 $\\angle ADB$와 $\\angle ADC$의 관계는?', ['$\\angle ADB = \\angle ADC$', '$\\angle ADB > \\angle ADC$', '알 수 없다'], 0, ()=>{
+      addProofLine(2, '$\\angle ADB = \\angle ADC$', '두 내각이 각각 같으므로 나머지 한 각의 크기도 같습니다');
+      markStepDone();
+      step3();
     });
   }
 
   function step3(){
     removeProofLinesFrom(3);
-    setInstruction(3, '두 삼각형이 함께 공유하고 있는 <strong>가운데 변 $AD$</strong>를 클릭해보세요', '두 삼각형 $\\triangle ABD$와 $\\triangle ACD$가 맞닿아 있는 공통변입니다.', '가운데 보조선 $AD$를 누르면 공통변으로 지정됩니다.');
+    setInstruction(3, '$\\triangle ABD$와 $\\triangle ACD$의 <strong>합동 조건</strong>을 찾아보세요', '각 $BAD=\\angle CAD$, 선분 $AD$ 공통, 각 $ADB=\\angle ADC$ 관계를 이용하세요.', '한 변의 길이와 그 양 끝각이 각각 같으므로 ASA 합동입니다.');
 
-    const adLine = el('line',{x1:A.x,y1:A.y,x2:D.x,y2:D.y, stroke:'transparent','stroke-width':24, class:'clickable-target focus-ring', tabindex:'0'});
-    svg.appendChild(adLine);
-    adLine.addEventListener('pointerdown', ()=>{
-      gTri.appendChild(lineEl(A,D,{stroke:'var(--violet)','stroke-width':3.5}));
-      adLine.remove();
-      addProofLine(3, '$\\overline{AD}$는 공통', '두 삼각형이 변 $AD$를 한 변으로 공유합니다');
-      markStepDone();
-      step4();
-    });
-  }
-
-  function step4(){
-    removeProofLinesFrom(4);
-    setInstruction(4, '한 변과 그 양 끝각이 같으므로 <strong>두 삼각형의 합동 조건</strong>은 무엇일까요?', '변 $AD$와 그 양 끝의 두 각이 각각 같습니다.', '한 변(Side)과 양 끝 두 각(Angle)이 같으므로 ASA 합동입니다.');
-    
-    buildQuiz(proofPanel, '$\\triangle ABD \\equiv \\triangle ACD$ 합동 조건은?', ['SSS','SAS','ASA','RHA'], 2, ()=>{
-      addProofLine(4, '$\\triangle ABD \\equiv \\triangle ACD$ (ASA 합동)', '합동이므로 대응하는 두 빗변의 길이가 같습니다');
-      const g = el('g');
-      g.appendChild(tickMarks(A,B,1,'var(--amber)'));
-      g.appendChild(tickMarks(A,C,1,'var(--amber)'));
-      svg.appendChild(g);
-      g.classList.add('pulse-glow');
-      showConclusion('$\\overline{AB} = \\overline{AC}$ (두 내각의 크기가 같으면 이등변삼각형이다)');
+    buildQuiz(proofPanel, '$\\triangle ABD \\equiv \\triangle ACD$의 합동 조건은?', ['SAS 합동','ASA 합동','RHS 합동'], 1, ()=>{
+      addProofLine(3, '$\\triangle ABD \\equiv \\triangle ACD$ (ASA 합동)', '선분 $AD$는 공통이고 양 끝각의 크기가 같습니다');
+      showConclusion('$\\overline{AB} = \\overline{AC}$ (두 내각의 크기가 같은 삼각형은 이등변삼각형이다)');
       markStepDone();
     });
   }
 
-  stepHistory = [step1, step2, step3, step4];
+  stepHistory = [step1, step2, step3];
   stepHistory[startStep - 1]();
 }
 
+/* ==========================================================================
+   Tab 3: 직각삼각형의 RHS 합동 (빗변과 한 다른 변이 같을 때)
+   ========================================================================== */
 function initTab3(startStep = 1){
   clearCanvas(); clearProof();
-  const A = {x:270,y:90}, B = {x:80,y:330}, C = {x:270,y:330};
-  const D0 = {x:390,y:90}, E0 = {x:580,y:330}, F0 = {x:390,y:330};
+  const A = {x:320,y:80}, C = {x:320,y:360};
+  const B = {x:140,y:360}, D = {x:500,y:360};
 
-  const gLeft = el('g');
-  const gRight = el('g');
-  svg.appendChild(gLeft);
-  svg.appendChild(gRight);
+  const g = el('g');
+  svg.appendChild(g);
 
-  function renderInitial(){
-    gLeft.innerHTML = ''; gRight.innerHTML = '';
-    gLeft.appendChild(lineEl(A,B)); gLeft.appendChild(lineEl(B,C)); gLeft.appendChild(lineEl(C,A));
-    gLeft.appendChild(el('path',{d:rightAngleMark(C, angleOf(C.x,C.y,A.x,A.y), angleOf(C.x,C.y,B.x,B.y),14), stroke:'var(--ink)','stroke-width':2, fill:'none'}));
-    gLeft.appendChild(tickMarks(A,C,1,'var(--blue)'));
-    gLeft.appendChild(tickMarks(A,B,2,'var(--orange)'));
-    gLeft.appendChild(labelDot(A,'A',{dy:-12}));
-    gLeft.appendChild(labelDot(B,'B',{dx:-14,dy:8}));
-    gLeft.appendChild(labelDot(C,'C',{dx:-14,dy:8}));
+  function drawBase(){
+    g.innerHTML = '';
+    // Left Triangle ABC
+    g.appendChild(lineEl(A,B)); g.appendChild(lineEl(B,C)); g.appendChild(lineEl(C,A));
+    // Right Triangle ADC
+    g.appendChild(lineEl(A,D)); g.appendChild(lineEl(C,D));
+    
+    // Right angle mark at C
+    g.appendChild(el('path',{d:rightAngleMark(C, 180, 270, 15), stroke:'var(--ink)','stroke-width':2, fill:'none'}));
+    g.appendChild(el('path',{d:rightAngleMark(C, 270, 0, 15), stroke:'var(--ink)','stroke-width':2, fill:'none'}));
 
-    gRight.appendChild(lineEl(D0,E0)); gRight.appendChild(lineEl(E0,F0)); gRight.appendChild(lineEl(F0,D0));
-    gRight.appendChild(el('path',{d:rightAngleMark(F0, angleOf(F0.x,F0.y,D0.x,D0.y), angleOf(F0.x,F0.y,E0.x,E0.y),14), stroke:'var(--ink)','stroke-width':2, fill:'none'}));
-    gRight.appendChild(tickMarks(D0,F0,1,'var(--blue)'));
-    gRight.appendChild(tickMarks(D0,E0,2,'var(--orange)'));
-    gRight.appendChild(labelDot(D0,'D',{dy:-12}));
-    gRight.appendChild(labelDot(E0,'E',{dx:14,dy:8}));
-    gRight.appendChild(labelDot(F0,'F',{dx:14,dy:8}));
+    // Hypotenuse tick marks AB = AD
+    g.appendChild(tickMarks(A,B,2,'var(--orange)'));
+    g.appendChild(tickMarks(A,D,2,'var(--orange)'));
+
+    // Leg tick mark AC
+    g.appendChild(tickMarks(A,C,1,'var(--teal)'));
+
+    g.appendChild(labelDot(A,'A',{dy:-12}));
+    g.appendChild(labelDot(B,'B',{dx:-14,dy:8}));
+    g.appendChild(labelDot(C,'C',{dy:22}));
+    g.appendChild(labelDot(D,'D',{dx:14,dy:8}));
   }
 
   function step1(){
     removeProofLinesFrom(1);
-    renderInitial();
-    setInstruction(1, '오른쪽 삼각형을 드래그하여 <strong>$\\overline{AC}$ 변에 딱 맞닿게 붙여보세요</strong>', '길이가 같은 두 변 $\\overline{AC}$와 $\\overline{DF}$가 포개어지도록 이동시킵니다.', '점 $F$의 파란 원을 잡고 점 $C$ 위로 가져가면 착 달라붙습니다.');
+    drawBase();
+    setInstruction(1, '두 직각삼각형을 변 $AC$에 붙여 만든 <strong>큰 삼각형 $\\triangle ABD$</strong>의 형태를 확인하세요', '빗변 $AB = AD$ 이므로 큰 삼각형은 어떤 삼각형이 될까요?', '두 변 $AB$와 $AD$의 길이가 같으므로 이등변삼각형입니다.');
 
-    const dragHandle = el('circle',{cx:F0.x,cy:F0.y,r:11,fill:'var(--teal)',opacity:0.85,class:'grabbable'});
-    gRight.appendChild(dragHandle);
-
-    let dragging = false, offsetX = 0, offsetY = 0, curTransform = {x:0,y:0};
-
-    dragHandle.addEventListener('pointerdown', (e)=>{
-      dragging = true;
-      dragHandle.setPointerCapture(e.pointerId);
-      const p = svgPoint(svg, e);
-      offsetX = p.x - (F0.x + curTransform.x);
-      offsetY = p.y - (F0.y + curTransform.y);
-    });
-    dragHandle.addEventListener('pointermove', (e)=>{
-      if (!dragging) return;
-      const p = svgPoint(svg, e);
-      curTransform.x = p.x - offsetX - F0.x;
-      curTransform.y = p.y - offsetY - F0.y;
-      gRight.setAttribute('transform', `translate(${curTransform.x},${curTransform.y})`);
-    });
-    dragHandle.addEventListener('pointerup', ()=>{
-      dragging = false;
-      const curF = { x: F0.x + curTransform.x, y: F0.y + curTransform.y };
-      if (dist(curF, C) < 50){
-        dragHandle.remove();
-        addProofLine(1, '$\\overline{AC}=\\overline{DF}$ 맞닿음 $\\rightarrow B, C, E$ 일직선', '두 직각($90^\\circ+90^\\circ=180^\\circ$)이 합쳐져 밑변이 평각(일직선)이 됩니다');
-        markStepDone();
-        step2();
-      } else {
-        gRight.setAttribute('transform', 'translate(0,0)');
-        curTransform = {x:0,y:0};
-        shakeEl(gRight);
-      }
+    buildQuiz(proofPanel, '$\\triangle ABD$는 어떤 삼각형인가요?', ['이등변삼각형','정삼각형','직각삼각형'], 0, ()=>{
+      addProofLine(1, '$\\overline{AB} = \\overline{AD} \\implies \\triangle ABD$는 이등변삼각형', '길이가 같은 변 $AC$를 붙여 큰 이등변삼각형을 만들었습니다');
+      markStepDone();
+      step2();
     });
   }
 
   function step2(){
     removeProofLinesFrom(2);
-    const E_final = { x: C.x + (C.x - B.x), y: C.y };
-    gLeft.innerHTML = ''; gRight.innerHTML = '';
-    gRight.removeAttribute('transform');
+    setInstruction(2, '이등변삼각형의 성질에 의해 <strong>두 밑각 $\\angle B$와 $\\angle D$</strong>의 관계를 고르세요', '이등변삼각형의 두 밑각의 크기는 같습니다.', '$\\angle B = \\angle D$ 임을 확인할 수 있습니다.');
 
-    // 왼쪽 삼각형
-    gLeft.appendChild(lineEl(A,B)); gLeft.appendChild(lineEl(B,C)); gLeft.appendChild(lineEl(C,A));
-    gLeft.appendChild(el('path',{d:rightAngleMark(C, angleOf(C.x,C.y,A.x,A.y), angleOf(C.x,C.y,B.x,B.y),14), stroke:'var(--ink)','stroke-width':2, fill:'none'}));
-    gLeft.appendChild(tickMarks(A,B,2,'var(--orange)'));
-    gLeft.appendChild(labelDot(A,'A(D)',{dy:-14}));
-    gLeft.appendChild(labelDot(B,'B',{dx:-14,dy:8}));
-    gLeft.appendChild(labelDot(C,'C(F)',{dx:0,dy:20}));
-
-    // 미리 각 B를 노란색 호로 선명하게 표시하여 학생들이 쉽게 비교하도록 유도
-    const preArcB = el('path',{d:arcPath(B.x,B.y,26, angleOf(B.x,B.y,C.x,C.y), angleOf(B.x,B.y,A.x,A.y)), stroke:'var(--amber)','stroke-width':3, fill:'none', class:'pulse-glow'});
-    gLeft.appendChild(preArcB);
-
-    // 오른쪽 삼각형
-    gRight.appendChild(lineEl(A,E_final)); gRight.appendChild(lineEl(E_final,C));
-    gRight.appendChild(el('path',{d:rightAngleMark(C, angleOf(C.x,C.y,E_final.x,E_final.y), angleOf(C.x,C.y,A.x,A.y),14), stroke:'var(--ink)','stroke-width':2, fill:'none'}));
-    gRight.appendChild(tickMarks(A,E_final,2,'var(--orange)'));
-    gRight.appendChild(labelDot(E_final,'E',{dx:16,dy:8}));
-    
-    // 공통 변
-    const midLine = lineEl(A,C,{stroke:'var(--blue)','stroke-width':3});
-    svg.appendChild(midLine);
-
-    setInstruction(2, '$\\triangle ABE$는 이등변삼각형입니다. 그림에 표시된 **$\\angle B$와 크기가 같은 각**을 눌러보세요', '두 빗변($\\overline{AB}=\\overline{AE}$)의 길이가 같으므로 두 밑각의 크기가 같습니다.', '오른쪽 밑각인 점 $E$를 콕 눌러보세요.');
-
-    const targetE = el('circle',{cx:E_final.x, cy:E_final.y, r:22, fill:'transparent', class:'clickable-target focus-ring'});
-    svg.appendChild(targetE);
-
-    targetE.addEventListener('pointerdown', ()=>{
-      targetE.remove();
-      svg.appendChild(el('path',{d:arcPath(E_final.x,E_final.y,26, angleOf(E_final.x,E_final.y,A.x,A.y), angleOf(E_final.x,E_final.y,C.x,C.y)), stroke:'var(--amber)','stroke-width':2.5, fill:'none', class:'pulse-glow'}));
-      addProofLine(2, '$\\angle B = \\angle E$', '이등변삼각형의 두 밑각의 크기는 같습니다');
+    buildQuiz(proofPanel, '$\\angle B$와 $\\angle D$의 크기 관계는?', ['$\\angle B = \\angle D$','$\\angle B > \\angle D$','$\\angle B + \\angle D = 90^\\circ$'], 0, ()=>{
+      addProofLine(2, '$\\angle B = \\angle D$', '이등변삼각형의 두 밑각의 크기는 같습니다');
       markStepDone();
-      step3(E_final);
+      step3();
     });
   }
 
-  function step3(E_final){
+  function step3(){
     removeProofLinesFrom(3);
-    setInstruction(3, '직각삼각형의 성질에 의해 <strong>$\\angle BAC$와 크기가 같은 위쪽 각</strong>을 눌러보세요', '두 삼각형 모두 $90^\\circ - (밑각)$ 이므로 꼭지각의 크기도 서로 같습니다.', '위쪽 꼭짓점 $A(D)$ 주변의 오른쪽 각 영역을 눌러보세요.');
+    setInstruction(3, '빗변 $AB=AD$, 직각 $\\angle C$, 한 예각 $\\angle B=\\angle D$가 같으므로 <strong>RHA/RHS 합동</strong>이 성립합니다', '최종 합동 결과를 정리해보세요.', '두 직각삼각형에서 빗변의 길이와 한 변의 길이가 각각 같으면 합동입니다 (RHS 합동).');
 
-    // 미리 \angle BAC를 보라색 호로 선명하게 표시하여 쉽게 비교하도록 유도
-    const preArcBAC = el('path',{d:arcPath(A.x,A.y,26, angleOf(A.x,A.y,B.x,B.y), angleOf(A.x,A.y,C.x,C.y)), stroke:'var(--violet)','stroke-width':3, fill:'none', class:'pulse-glow'});
-    svg.appendChild(preArcBAC);
-
-    const targetA = el('circle',{cx:A.x + 15, cy:A.y + 20, r:20, fill:'transparent', class:'clickable-target focus-ring'});
-    svg.appendChild(targetA);
-
-    targetA.addEventListener('pointerdown', ()=>{
-      targetA.remove();
-      svg.appendChild(el('path',{d:arcPath(A.x,A.y,26, angleOf(A.x,A.y,C.x,C.y), angleOf(A.x,A.y,E_final.x,E_final.y)), stroke:'var(--violet)','stroke-width':2.5, fill:'none', class:'pulse-glow'}));
-      addProofLine(3, '$\\angle BAC = \\angle EDF$ (나머지 각)', '두 직각삼각형의 모든 세 각의 크기가 서로 같습니다');
-      markStepDone();
-      step4();
-    });
-  }
-
-  function step4(){
-    removeProofLinesFrom(4);
-    setInstruction(4, '이제 두 삼각형의 합동을 설명할 수 있습니다. <strong>합동 조건(SAS 또는 ASA)</strong>을 선택해보세요', '발견한 조건들을 활용해 SAS나 ASA 중 하나를 선택하면 대응 요소를 하이라이트해 드립니다.', 'SAS와 ASA 모두 정답입니다.');
-
-    buildQuiz(proofPanel, '$\\triangle ABC \\equiv \\triangle DEF$ 정당화 조건 선택:', ['SAS','ASA','SSS'], (opt) => opt === 'SAS' || opt === 'ASA', (selected)=>{
-      if (selected === 'SAS'){
-        addProofLine(4, '$\\triangle ABC \\equiv \\triangle DEF$ (SAS 합동)', '두 변의 길이와 그 끼인각($90^\\circ$)이 각각 같습니다');
-      } else {
-        addProofLine(4, '$\\triangle ABC \\equiv \\triangle DEF$ (ASA 합동)', '한 변의 길이와 그 양 끝각이 각각 같습니다');
-      }
-      showConclusion('$\\triangle ABC \\equiv \\triangle DEF$ (빗변과 한 변이 같은 RHS 합동 성립)');
+    buildQuiz(proofPanel, '$\\triangle ABC \\equiv \\triangle ADC$의 최종 직각삼각형 합동 조건은?', ['RHS 합동','RHA 합동','SAS 합동'], 0, ()=>{
+      addProofLine(3, '$\\triangle ABC \\equiv \\triangle ADC$ (RHS 합동)', '빗변(H)의 길이와 한 변(S)의 길이가 각각 같습니다');
+      showConclusion('$\\triangle ABC \\equiv \\triangle ADC$ (RHS 합동 증명 완료)');
       markStepDone();
     });
   }
 
-  stepHistory = [step1, step2, () => step2(), () => step2()];
+  stepHistory = [step1, step2, step3];
   stepHistory[startStep - 1]();
 }
 
+/* ==========================================================================
+   Tab 4: 직각삼각형의 RHA 합동 (빗변과 한 예각이 같을 때)
+   ========================================================================== */
 function initTab4(startStep = 1){
   clearCanvas(); clearProof();
   const A = {x:270,y:90}, B = {x:70,y:330}, C = {x:270,y:330};
@@ -966,7 +820,7 @@ function initTab4(startStep = 1){
     removeProofLinesFrom(2);
     setInstruction(2, '빗변의 길이와 그 양 끝각이 같으므로 <strong>기존 삼각형의 어떤 합동 조건</strong>에 해당할까요?', '빗변 $\\overline{AB}=\\overline{DE}$와 양 끝 두 각이 각각 같습니다.', '한 변(Side)과 양 끝 두 각(Angle)이 같으므로 ASA 합동입니다.');
 
-    buildQuiz(proofPanel, '$\\triangle ABC \\equiv \\triangle DEF$ 합동 조건은?', ['SAS','ASA','SSS','RHA'], 1, ()=>{
+    buildQuiz(proofPanel, '$\\triangle ABC \\equiv \\triangle DEF$ 일반 삼각형 합동 조건은?', ['SAS','ASA','SSS','RHA'], 1, ()=>{
       addProofLine(2, '$\\triangle ABC \\equiv \\triangle DEF$ (ASA 합동)', '빗변의 길이와 양 끝 각의 크기가 각각 같습니다');
       showConclusion('$\\triangle ABC \\equiv \\triangle DEF$ (빗변과 한 예각이 같은 RHA 합동 성립)');
       markStepDone();
@@ -977,6 +831,9 @@ function initTab4(startStep = 1){
   stepHistory[startStep - 1]();
 }
 
+/* ==========================================================================
+   탭 네비게이션 및 드로어 시스템
+   ========================================================================== */
 const TABS = [
   { id:1, label:'이등변삼각형의 성질', icon:'triangle', init: initTab1 },
   { id:2, label:'이등변삼각형이 되는 조건', icon:'move-diagonal', init: initTab2 },
@@ -1028,7 +885,7 @@ function renderTabNav(){
       tabNav.appendChild(b);
     }
 
-    // 좌측 슬라이드 드로어 메뉴 (모바일 스마트폰 최적화)
+    // 좌측 슬라이드 드로어 메뉴
     if(drawerNav){
       const db = document.createElement('button');
       db.className = 'flex items-center gap-3 p-3 rounded-xl font-600 text-[14px] text-left transition-all ' + 
@@ -1058,7 +915,10 @@ function switchTab(id){
   currentTab = id;
   currentStep = 1;
   renderTabNav();
-  TABS.find(t => t.id === id).init(1);
+  const targetTab = TABS.find(t => t.id === id);
+  if (targetTab && targetTab.init) {
+    targetTab.init(1);
+  }
   lucide.createIcons();
 }
 
@@ -1066,7 +926,10 @@ function switchTab(id){
 prevStepBtn.addEventListener('click', ()=>{
   if (currentStep > 1){
     currentStep--;
-    TABS.find(t => t.id === currentTab).init(currentStep);
+    const targetTab = TABS.find(t => t.id === currentTab);
+    if (targetTab && targetTab.init) {
+      targetTab.init(currentStep);
+    }
     lucide.createIcons();
   }
 });
@@ -1074,7 +937,10 @@ prevStepBtn.addEventListener('click', ()=>{
 // 처음부터 다시 버튼 동작
 document.getElementById('resetBtn').addEventListener('click', () => {
   currentStep = 1;
-  TABS.find(t => t.id === currentTab).init(1);
+  const targetTab = TABS.find(t => t.id === currentTab);
+  if (targetTab && targetTab.init) {
+    targetTab.init(1);
+  }
   lucide.createIcons();
 });
 
