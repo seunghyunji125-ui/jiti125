@@ -2,1161 +2,997 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>마음온 (Maeum-On) — AI 정서 지지 & 마음 케어</title>
-<!-- Tailwind CSS via CDN -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>도형 증명 실험실 — 중2 기하 인터랙티브 증명</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<!-- Font Awesome Icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<!-- Google Fonts: Noto Sans KR & Noto Serif KR -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@600;700&display=swap">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: {
-          deepBg: '#121526',
-          panelBg: '#1b2038',
-          cardBg: '#252b48',
-          accentSage: '#8fb8a4',
-          accentSageDark: '#6d9885',
-          accentRose: '#d9a3a0',
-          crisisCoral: '#c8583f',
-          warmText: '#f3efea',
-          subText: '#a49fbd'
-        },
-        fontFamily: {
-          sans: ['Noto Sans KR', 'sans-serif'],
-          serif: ['Noto Serif KR', 'serif']
-        }
-      }
-    }
-  }
-</script>
+<!-- KaTeX 수식 렌더링 라이브러리 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
 <style>
-:root {
-  --sage: #8fb8a4;
-  --sage-dark: #6d9885;
-  --coral: #c8583f;
-}
-
-body {
-  background-color: #0b0d19;
-  color: #f3efea;
-  font-family: 'Noto Sans KR', sans-serif;
-  touch-action: manipulation;
-}
-
-/* Custom Scrollbars */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.03);
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
-}
-
-/* Breathing Orb Animation */
-@keyframes orbPulse {
-  0%, 100% {
-    transform: scale(1);
-    box-shadow: 0 0 35px rgba(143, 184, 164, 0.3);
-    opacity: 0.85;
+  :root{
+    --bg: #EEF3FB;
+    --grid-line: rgba(37,99,169,0.10);
+    --grid-line-strong: rgba(37,99,169,0.18);
+    --paper: #FFFFFF;
+    --paper-edge: #D7E3F5;
+    --ink: #16213E;
+    --ink-soft: #4B5A79;
+    --ink-faint: #8996B3;
+    --teal: #0EA5A4;
+    --teal-dark: #0A7A79;
+    --amber: #F5A524;
+    --coral: #F0546A;
+    --violet: #7C6FF0;
+    --blue: #3B82F6;
+    --orange: #FB923C;
   }
-  50% {
-    transform: scale(1.15);
-    box-shadow: 0 0 60px rgba(143, 184, 164, 0.6);
-    opacity: 1;
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    background-color: var(--bg);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(var(--grid-line-strong) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line-strong) 1px, transparent 1px);
+    background-size: 16px 16px, 16px 16px, 80px 80px, 80px 80px;
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
   }
-}
+  .font-display{ font-family:'Space Grotesk', sans-serif; }
+  .font-mono{ font-family:'JetBrains Mono', monospace; }
 
-.orb-glow {
-  background: radial-gradient(circle at 35% 30%, #8fb8a4, #4a7563);
-  animation: orbPulse 5s ease-in-out infinite;
-}
+  .paper{
+    background: var(--paper);
+    border: 1px solid var(--paper-edge);
+    box-shadow: 0 1px 2px rgba(22,33,62,0.04), 0 8px 24px -12px rgba(22,33,62,0.12);
+    border-radius: 14px;
+  }
 
-/* Interactive Breathing Circle Dynamic Scale */
-.breath-circle {
-  transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
-}
+  .dim-badge{
+    display:inline-flex; align-items:center; justify-content:center;
+    width: 32px; height: 32px; border-radius: 999px;
+    border: 1.5px dashed var(--teal); color: var(--teal-dark);
+    font-family:'JetBrains Mono', monospace; font-weight:600; font-size: 13px;
+    flex-shrink:0; background: #F0FBFA;
+  }
+  .dim-badge.done{ border-style: solid; background: var(--teal); color:white; }
+  .dim-badge.active{ box-shadow: 0 0 0 4px rgba(14,165,164,0.15); }
 
-/* Slide in animation */
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+  .tab-btn{
+    display:flex; align-items:center; gap:8px; padding: 9px 13px;
+    border-radius: 10px; font-size: 13px; font-weight: 600;
+    color: var(--ink-soft); border: 1px solid transparent;
+    transition: all .15s ease; white-space: nowrap;
+  }
+  .tab-btn:hover{ background: rgba(59,130,246,0.06); }
+  .tab-btn.active{
+    background: var(--ink); color: white;
+    box-shadow: 0 4px 10px -4px rgba(22,33,62,0.4);
+  }
 
-.animate-slide-up {
-  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
+  .proof-line{
+    border-left: 3px solid var(--paper-edge);
+    padding: 10px 14px; opacity: 0.45; transition: all .25s ease;
+  }
+  .proof-line.active{
+    border-left-color: var(--teal); background: #F0FBFA;
+    opacity: 1; border-radius: 0 8px 8px 0;
+  }
 
-/* Custom Input Focus Glow */
-textarea:focus, input:focus {
-  outline: none;
-  border-color: #8fb8a4 !important;
-  box-shadow: 0 0 12px rgba(143, 184, 164, 0.25);
-}
+  .quiz-btn{
+    padding: 9px 15px; border-radius: 10px;
+    border: 1.5px solid var(--paper-edge);
+    font-family:'JetBrains Mono', monospace; font-weight:600;
+    font-size: 13px; color: var(--ink); background: white;
+    transition: all .12s ease;
+  }
+  .quiz-btn:hover{ border-color: var(--teal); background: #F0FBFA; }
+  .quiz-btn.correct{ border-color: var(--teal); background: var(--teal); color:white; }
+  .quiz-btn.wrong{ border-color: var(--coral); background: #FDECEE; color: var(--coral); }
+  .quiz-btn:disabled{ pointer-events:none; }
+
+  @keyframes shakeX{
+    10%,90%{ transform: translateX(-2px); }
+    20%,80%{ transform: translateX(4px); }
+    30%,50%,70%{ transform: translateX(-6px); }
+    40%,60%{ transform: translateX(6px); }
+  }
+  .shake{ animation: shakeX .45s cubic-bezier(.36,.07,.19,.97) both; }
+
+  @keyframes popIn{
+    0%{ opacity:0; transform: scale(.92); }
+    100%{ opacity:1; transform: scale(1); }
+  }
+  .pop-in{ animation: popIn .25s ease-out both; }
+
+  @keyframes pulseGlow{
+    0%,100%{ filter: drop-shadow(0 0 0px currentColor); }
+    50%{ filter: drop-shadow(0 0 6px currentColor); }
+  }
+  .pulse-glow{ animation: pulseGlow 1.5s ease-in-out infinite; }
+
+  svg text{ font-family:'JetBrains Mono', monospace; user-select:none; }
+  .grabbable{ cursor: grab; }
+  .grabbable:active{ cursor: grabbing; }
+  .clickable-target{ cursor: pointer; transition: transform .15s ease; }
+  .clickable-target:hover{ transform: scale(1.15); }
+
+  .focus-ring:focus-visible{ outline: 3px solid var(--blue); outline-offset: 2px; }
 </style>
 </head>
-<body class="h-screen w-screen overflow-hidden flex justify-center items-center">
+<body class="min-h-screen pb-10">
 
-<div id="app" class="w-full max-w-md md:max-w-xl h-full md:h-[92vh] bg-deepBg md:rounded-3xl shadow-2xl flex flex-col overflow-hidden relative border border-white/10">
-
-  <!-- TOP HEADER -->
-  <header class="bg-panelBg px-4 py-3 border-b border-white/10 flex items-center justify-between flex-shrink-0 z-20">
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-full orb-glow flex items-center justify-center flex-shrink-0 cursor-pointer" onclick="switchTab('chat')">
-        <i class="fa-solid fa-leaf text-deepBg text-xs"></i>
+  <header class="sticky top-0 z-30 backdrop-blur bg-[#EEF3FBee] border-b border-[var(--paper-edge)]">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center gap-3 flex-wrap">
+      <div class="flex items-center gap-2.5 mr-2">
+        <div class="w-9 h-9 rounded-xl bg-[var(--ink)] text-white flex items-center justify-center flex-shrink-0">
+          <i data-lucide="compass" class="w-5 h-5"></i>
+        </div>
+        <div class="leading-tight">
+          <h1 class="font-display font-700 text-[15px] tracking-tight">도형 증명 실험실</h1>
+          <p class="text-[11px] text-[var(--ink-faint)] font-mono">중2 기하 · 삼각형의 합동</p>
+        </div>
       </div>
-      <div>
-        <h1 class="font-serif font-bold text-base text-warmText flex items-center gap-2">
-          마음온 <span class="text-[10px] font-sans font-normal bg-accentSage/20 text-accentSage px-2 py-0.5 rounded-full">AI 정서케어</span>
-        </h1>
-        <p class="text-[11px] text-subText">당신의 이야기를 따뜻하게 듣습니다</p>
+      <nav id="tabNav" class="flex items-center gap-1.5 overflow-x-auto flex-1 min-w-0"></nav>
+      <div class="flex items-center gap-2">
+        <button id="prevStepBtn" class="tab-btn border border-[var(--paper-edge)] bg-white focus-ring text-[12px] py-2 px-3" title="이전 단계로 돌아가기">
+          <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+          <span>이전 단계</span>
+        </button>
+        <button id="resetBtn" class="tab-btn border border-[var(--paper-edge)] bg-white focus-ring text-[12px] py-2 px-3" title="이 탭을 처음부터 다시 보기">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+          <span>처음부터</span>
+        </button>
       </div>
-    </div>
-
-    <div class="flex items-center gap-2">
-      <!-- Voice Toggle -->
-      <button id="tts-toggle-btn" onclick="toggleTTS()" class="p-2 text-xs rounded-xl bg-white/5 hover:bg-white/10 text-subText transition border border-white/5 flex items-center gap-1.5" title="AI 목소리 켜기/끄기">
-        <i class="fa-solid fa-volume-xmark text-slate-400" id="tts-icon"></i>
-        <span class="hidden sm:inline text-[11px]" id="tts-status">음성 끔</span>
-      </button>
-
-      <!-- Emergency SOS Button -->
-      <button onclick="switchTab('crisis')" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-crisisCoral/20 border border-crisisCoral/40 text-crisisCoral hover:bg-crisisCoral/30 transition flex items-center gap-1">
-        <i class="fa-solid fa-circle-exclamation"></i>
-        <span>SOS 위기</span>
-      </button>
     </div>
   </header>
 
-  <!-- CONTENT VIEWS CONTAINER -->
-  <main class="flex-1 overflow-hidden relative bg-deepBg">
-    
-    <!-- ==================== TAB 1: CHAT VIEW ==================== -->
-    <section id="view-chat" class="h-full flex flex-col justify-between">
-      
-      <!-- Notice Banner -->
-      <div class="bg-panelBg/80 px-4 py-2 border-b border-white/5 text-[11px] text-subText flex justify-between items-center flex-shrink-0">
-        <span class="flex items-center gap-1.5">
-          <i class="fa-solid fa-shield-halved text-accentSage"></i>
-          비밀보장 · 진단/치료 대체 불가 · 익명 보장
-        </span>
-        <button onclick="clearChatHistory()" class="text-xs text-subText hover:text-warmText underline">대화 초기화</button>
+  <main class="max-w-7xl mx-auto px-4 md:px-6 pt-5">
+    <div class="paper px-4 md:px-5 py-3.5 mb-4 flex items-start gap-3.5">
+      <div id="stepBadge" class="dim-badge active mt-0.5">1</div>
+      <div class="flex-1 min-w-0">
+        <p id="instructionText" class="font-display font-600 text-[15px] md:text-[16px] leading-snug"></p>
+        <p id="instructionSub" class="text-[13px] text-[var(--ink-soft)] mt-1"></p>
       </div>
-
-      <!-- Messages Area -->
-      <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4">
-        <!-- AI Initial Greeting Message -->
-        <div class="flex gap-3 max-w-[88%] animate-slide-up">
-          <div class="w-8 h-8 rounded-full bg-accentSage/20 text-accentSage flex items-center justify-center flex-shrink-0 border border-accentSage/30">
-            <i class="fa-solid fa-leaf text-sm"></i>
-          </div>
-          <div class="space-y-1">
-            <div class="bg-panelBg border border-white/10 p-3.5 rounded-2xl rounded-tl-none text-sm text-warmText leading-relaxed shadow-sm">
-              안녕하세요. 저는 당신의 이야기를 경청하고 마음을 살피는 <b>마음온</b>이에요. 🌱<br><br>
-              오늘 어떤 생각이나 감정이 마음을 채우고 있나요? 부담 없이 편안하게 적어주세요.
-            </div>
-            <div class="text-[10px] text-subText px-1">방금 전</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Typing Indicator -->
-      <div id="chat-typing" class="hidden px-4 py-2 text-xs text-subText flex items-center gap-2">
-        <div class="w-2 h-2 bg-accentSage rounded-full animate-ping"></div>
-        <span>마음온이 따뜻한 답변을 생각하고 있어요...</span>
-      </div>
-
-      <!-- Chat Input Panel -->
-      <div class="p-3 bg-panelBg border-t border-white/10 flex-shrink-0">
-        <!-- Quick Sentiment Pills -->
-        <div class="flex gap-1.5 overflow-x-auto pb-2 mb-1 no-scrollbar text-xs">
-          <button onclick="sendQuickPrompt('요즘 마음이 너무 우울하고 기운이 없어요.')" class="bg-white/5 hover:bg-white/10 text-subText hover:text-warmText px-3 py-1 rounded-full whitespace-nowrap border border-white/5 transition">🌧️ 막막하고 우울해요</button>
-          <button onclick="sendQuickPrompt('생각이 많아서 마음이 불안하고 조급해요.')" class="bg-white/5 hover:bg-white/10 text-subText hover:text-warmText px-3 py-1 rounded-full whitespace-nowrap border border-white/5 transition">⚡ 답답하고 불안해요</button>
-          <button onclick="sendQuickPrompt('누군가에게 털어놓지 못하는 외로움이 있어요.')" class="bg-white/5 hover:bg-white/10 text-subText hover:text-warmText px-3 py-1 rounded-full whitespace-nowrap border border-white/5 transition">🌌 외롭고 힘들어요</button>
-        </div>
-
-        <div class="flex items-end gap-2 bg-deepBg p-2 rounded-2xl border border-white/10">
-          <!-- Mic Input Button -->
-          <button id="mic-btn" onclick="toggleSpeechRecognition()" class="p-2.5 rounded-xl text-subText hover:text-accentSage hover:bg-white/5 transition flex-shrink-0" title="음성 입력">
-            <i class="fa-solid fa-microphone text-base" id="mic-icon"></i>
-          </button>
-
-          <!-- Textarea -->
-          <textarea id="chat-input" rows="1" placeholder="마음에 남은 이야기를 들려주세요..." class="flex-1 bg-transparent border-none text-sm text-warmText resize-none max-h-28 min-h-[40px] py-2 px-1 focus:outline-none placeholder-subText/60"></textarea>
-
-          <!-- Send Button -->
-          <button id="chat-send-btn" onclick="handleUserSend()" class="px-4 py-2 bg-accentSage hover:bg-accentSageDark text-deepBg font-bold rounded-xl transition text-sm flex items-center justify-center flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed">
-            <i class="fa-solid fa-paper-plane"></i>
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ==================== TAB 2: BREATHING VIEW ==================== -->
-    <section id="view-breathing" class="h-full hidden flex-col items-center justify-between p-6 text-center overflow-y-auto">
-      <div>
-        <h2 class="text-xl font-serif font-bold text-warmText mb-1">마음 호흡 가이드</h2>
-        <p class="text-xs text-subText">숨을 고르면 경직된 마음과 신경이 부드럽게 이완됩니다.</p>
-      </div>
-
-      <!-- Breathing Visualizer Orb -->
-      <div class="my-auto flex flex-col items-center justify-center py-6">
-        <div class="relative w-64 h-64 flex items-center justify-center">
-          <!-- Outer Ring -->
-          <div class="absolute inset-0 border-2 border-dashed border-accentSage/30 rounded-full"></div>
-          
-          <!-- Animated Circle -->
-          <div id="breath-orb" class="breath-circle w-44 h-44 rounded-full bg-gradient-to-br from-accentSage via-accentSageDark to-panelBg shadow-2xl flex flex-col items-center justify-center border border-white/20">
-            <span id="breath-action" class="font-serif text-lg font-bold text-deepBg">준비</span>
-            <span id="breath-timer" class="text-2xl font-extrabold text-deepBg mt-1">4</span>
-          </div>
-        </div>
-
-        <p id="breath-subtext" class="text-sm text-subText mt-6 h-8 px-4">
-          아래 버튼을 눌러 편안하게 호흡을 시작해보세요.
-        </p>
-      </div>
-
-      <!-- Controls -->
-      <div class="w-full space-y-4">
-        <!-- Technique Selector -->
-        <div class="flex justify-center gap-2 text-xs">
-          <button id="mode-478" onclick="setBreathingTechnique('478')" class="px-4 py-2 rounded-xl bg-accentSage/20 text-accentSage border border-accentSage/40 font-bold">
-            4-7-8 이완 호흡
-          </button>
-          <button id="mode-box" onclick="setBreathingTechnique('box')" class="px-4 py-2 rounded-xl bg-white/5 text-subText border border-white/10 hover:bg-white/10">
-            박스 호흡 (4-4-4-4)
-          </button>
-        </div>
-
-        <div class="flex items-center justify-center gap-3">
-          <button id="breath-start-btn" onclick="toggleBreathingSession()" class="flex-1 py-3 bg-accentSage text-deepBg font-bold rounded-2xl shadow-lg hover:bg-accentSageDark transition">
-            <i class="fa-solid fa-play mr-1"></i> 호흡 시작
-          </button>
-          <button onclick="resetBreathingSession()" class="px-4 py-3 bg-white/5 text-subText hover:text-warmText rounded-2xl border border-white/10">
-            <i class="fa-solid fa-rotate-right"></i>
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ==================== TAB 3: MOOD JOURNAL VIEW ==================== -->
-    <section id="view-journal" class="h-full hidden flex-col p-5 overflow-y-auto space-y-5">
-      <div>
-        <h2 class="text-xl font-serif font-bold text-warmText mb-1">감정 일기장</h2>
-        <p class="text-xs text-subText">오늘 스쳐 지나간 감정을 솔직하게 남겨두세요.</p>
-      </div>
-
-      <!-- New Entry Form -->
-      <div class="bg-panelBg p-4 rounded-2xl border border-white/10 space-y-4">
-        <h3 class="text-xs font-bold text-accentSage uppercase tracking-wider">오늘의 주요 감정</h3>
-        
-        <!-- Mood Selector Buttons -->
-        <div class="grid grid-cols-3 gap-2" id="mood-picker">
-          <button onclick="selectMood('평온', '😊')" class="mood-btn p-2.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 flex flex-col items-center gap-1 text-xs text-subText">
-            <span class="text-xl">😊</span><span>평온함</span>
-          </button>
-          <button onclick="selectMood('희망', '🌿')" class="mood-btn p-2.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 flex flex-col items-center gap-1 text-xs text-subText">
-            <span class="text-xl">🌿</span><span>희망참</span>
-          </button>
-          <button onclick="selectMood('우울', '🌧️')" class="mood-btn p-2.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 flex flex-col items-center gap-1 text-xs text-subText">
-            <span class="text-xl">🌧️</span><span>우울함</span>
-          </button>
-          <button onclick="selectMood('불안', '⚡')" class="mood-btn p-2.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 flex flex-col items-center gap-1 text-xs text-subText">
-            <span class="text-xl">⚡</span><span>불안함</span>
-          </button>
-          <button onclick="selectMood('분노', '🔥')" class="mood-btn p-2.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 flex flex-col items-center gap-1 text-xs text-subText">
-            <span class="text-xl">🔥</span><span>답답/화남</span>
-          </button>
-          <button onclick="selectMood('외로움', '🌌')" class="mood-btn p-2.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 flex flex-col items-center gap-1 text-xs text-subText">
-            <span class="text-xl">🌌</span><span>외로움</span>
-          </button>
-        </div>
-
-        <!-- Emotion Intensity Slider -->
-        <div class="space-y-1">
-          <div class="flex justify-between text-xs text-subText">
-            <span>감정의 강도</span>
-            <span id="intensity-val" class="text-accentSage font-bold">5 / 10</span>
-          </div>
-          <input type="range" id="intensity-slider" min="1" max="10" value="5" oninput="updateIntensityDisplay(this.value)" class="w-full accent-accentSage">
-        </div>
-
-        <!-- Journal Text -->
-        <textarea id="journal-text" rows="3" placeholder="어떤 일이 있었나요? 마음속 감정을 자유롭게 적어보세요..." class="w-full bg-deepBg p-3 rounded-xl text-xs text-warmText border border-white/10 placeholder-subText/50"></textarea>
-
-        <button onclick="saveJournalEntry()" class="w-full py-2.5 bg-accentSage text-deepBg font-bold text-xs rounded-xl hover:bg-accentSageDark transition">
-          <i class="fa-solid fa-bookmark mr-1"></i> 감정 기록 저장하기
-        </button>
-      </div>
-
-      <!-- History List -->
-      <div class="space-y-3">
-        <h3 class="text-xs font-bold text-subText uppercase tracking-wider flex justify-between items-center">
-          <span>최근 기록한 마음</span>
-          <button onclick="clearJournalEntries()" class="text-[10px] text-subText underline">기록 전체 삭제</button>
-        </h3>
-        <div id="journal-history" class="space-y-2">
-          <!-- Dynamically populated -->
-        </div>
-      </div>
-    </section>
-
-    <!-- ==================== TAB 4: GROUNDING TOOLS VIEW ==================== -->
-    <section id="view-grounding" class="h-full hidden flex-col p-5 overflow-y-auto space-y-5">
-      <div>
-        <h2 class="text-xl font-serif font-bold text-warmText mb-1">마음 자극 그라운딩 (5-4-3-2-1)</h2>
-        <p class="text-xs text-subText">생각이 너무 복잡할 때 현재의 오감으로 감각을 돌려놓는 기법입니다.</p>
-      </div>
-
-      <!-- Grounding Wizard Steps -->
-      <div id="grounding-card" class="bg-panelBg p-5 rounded-2xl border border-white/10 space-y-4 text-center">
-        <div class="w-12 h-12 rounded-2xl bg-accentSage/20 text-accentSage flex items-center justify-center mx-auto text-xl border border-accentSage/30">
-          <i id="grounding-icon" class="fa-solid fa-eye"></i>
-        </div>
-        <h3 id="grounding-step-title" class="font-bold text-base text-warmText">1단계: 눈에 보이는 것 5가지</h3>
-        <p id="grounding-step-desc" class="text-xs text-subText leading-relaxed">
-          지금 눈앞 주변을 둘러보세요.<br>평소 보지 못했던 소품, 색상, 창밖의 풍경 등 5가지를 속으로 천천히 떠올려보세요.
-        </p>
-
-        <div class="flex justify-between items-center pt-2">
-          <button id="grounding-prev-btn" onclick="prevGroundingStep()" class="px-3 py-1.5 bg-white/5 text-subText rounded-xl text-xs border border-white/10 disabled:opacity-30">
-            이전
-          </button>
-          <span id="grounding-progress" class="text-xs font-bold text-accentSage">1 / 5</span>
-          <button id="grounding-next-btn" onclick="nextGroundingStep()" class="px-4 py-1.5 bg-accentSage text-deepBg font-bold rounded-xl text-xs">
-            다음단계 <i class="fa-solid fa-chevron-right ml-1"></i>
-          </button>
-        </div>
-      </div>
-
-      <!-- Positive Affirmation Generator -->
-      <div class="bg-panelBg p-5 rounded-2xl border border-white/10 space-y-3">
-        <h3 class="text-xs font-bold text-accentSage uppercase tracking-wider flex items-center gap-1.5">
-          <i class="fa-solid fa-sun text-amber-400"></i> 오늘의 따뜻한 자기 대화
-        </h3>
-        <p id="affirmation-text" class="text-sm font-serif italic text-warmText leading-relaxed p-3 bg-deepBg rounded-xl border border-white/5 text-center">
-          "지금의 불안은 잠시 스쳐 지나가는 구름일 뿐이에요. 나는 여전히 안전합니다."
-        </p>
-        <button onclick="generateNewAffirmation()" class="w-full py-2 bg-white/5 hover:bg-white/10 text-subText hover:text-warmText text-xs rounded-xl border border-white/5 transition">
-          <i class="fa-solid fa-arrows-rotate mr-1"></i> 다른 문장 읽기
-        </button>
-      </div>
-
-      <!-- Personal Safety Plan -->
-      <div class="bg-panelBg p-4 rounded-2xl border border-white/10 space-y-3">
-        <h3 class="text-xs font-bold text-crisisCoral uppercase tracking-wider">나의 나만의 안심 메모 (Safety Plan)</h3>
-        <p class="text-[11px] text-subText">마음이 걷잡을 수 없이 흔들릴 때 나를 지켜줄 행동을 적어두세요.</p>
-        <input type="text" id="safety-action" placeholder="예: 따뜻한 차 마시기, 좋아하는 음악 듣기, 친구 ○○에게 전화하기" class="w-full bg-deepBg p-3 rounded-xl text-xs text-warmText border border-white/10">
-        <button onclick="saveSafetyPlan()" class="w-full py-2 bg-crisisCoral/20 text-crisisCoral font-bold text-xs rounded-xl border border-crisisCoral/30 hover:bg-crisisCoral/30 transition">
-          안심 메모 저장하기
-        </button>
-        <p id="safety-plan-display" class="text-xs text-warmText italic bg-deepBg/50 p-2.5 rounded-xl hidden border border-white/5"></p>
-      </div>
-    </section>
-
-    <!-- ==================== TAB 5: CRISIS HOTLINES VIEW ==================== -->
-    <section id="view-crisis" class="h-full hidden flex-col p-5 overflow-y-auto space-y-4 bg-gradient-to-b from-crisisCoral/10 via-deepBg to-deepBg">
-      <div class="bg-crisisCoral/20 p-4 rounded-2xl border border-crisisCoral/40 text-center space-y-2">
-        <i class="fa-solid fa-heart-pulse text-crisisCoral text-3xl"></i>
-        <h2 class="text-lg font-bold text-warmText">혼자 감당하지 않아도 됩니다</h2>
-        <p class="text-xs text-warmText/80 leading-relaxed">
-          지금 느끼는 고통과 무거운 짐은 당신 혼자만의 몫이 아닙니다.<br>
-          언제든 익명으로 당신의 이야기를 들어줄 전문가들이 기다리고 있습니다.
-        </p>
-      </div>
-
-      <!-- Quick Call Cards -->
-      <div class="space-y-2.5" id="crisis-list">
-        <!-- Rendered by JS -->
-      </div>
-
-      <div class="p-4 bg-panelBg rounded-2xl border border-white/10 space-y-2 text-xs">
-        <h4 class="font-bold text-warmText flex items-center gap-1.5">
-          <i class="fa-solid fa-comment-sms text-accentSage"></i> 문자로 마음 털어놓기
-        </h4>
-        <p class="text-subText leading-relaxed">
-          전화 통화가 부담스럽다면, 문자로도 전문가 상담이 가능합니다.<br>
-          • <b>1388</b> (청소년 및 보호자 문자 상담)<br>
-          • <b>109</b> (24시간 통합 자살예방 상담)
-        </p>
-      </div>
-
-      <button onclick="switchTab('chat')" class="w-full py-3 bg-white/10 hover:bg-white/15 text-warmText font-bold text-xs rounded-2xl border border-white/10 transition">
-        ← 마음온 AI 대화로 돌아가기
+      <button id="hintBtn" class="tab-btn border border-[var(--paper-edge)] bg-white flex-shrink-0 focus-ring py-2 px-3">
+        <i data-lucide="lightbulb" class="w-4 h-4"></i>
+        <span class="hidden sm:inline">힌트</span>
       </button>
-    </section>
+    </div>
 
+    <div id="hintPanel" class="rounded-xl px-4 py-3 mb-4 text-[13px] leading-relaxed hidden bg-[#FFF7E8] border border-[#F0DBA6] text-[#B9790E]"></div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,1fr)] gap-4">
+      <div class="paper p-3 md:p-4 flex items-center justify-center relative">
+        <svg id="canvas" viewBox="0 0 640 460" class="w-full h-auto touch-none select-none" style="max-height: 72vh;"></svg>
+      </div>
+
+      <div class="paper p-4 md:p-5 flex flex-col min-h-[320px]">
+        <div class="flex items-center gap-2 mb-3 text-[var(--ink-faint)]">
+          <i data-lucide="scroll-text" class="w-4 h-4"></i>
+          <h2 class="font-display font-600 text-[13px] tracking-wide uppercase">증명 노트</h2>
+        </div>
+        <div id="proofPanel" class="flex flex-col gap-2 flex-1"></div>
+        <div id="conclusionBox" class="hidden mt-3 rounded-xl border-2 border-[var(--teal)] bg-[#F0FBFA] px-4 py-3 pop-in">
+          <div class="flex items-center gap-2 text-[var(--teal-dark)] mb-1">
+            <i data-lucide="badge-check" class="w-4 h-4"></i>
+            <span class="font-display font-700 text-[12px] uppercase tracking-wide">증명 완료</span>
+          </div>
+          <p id="conclusionText" class="font-mono text-[14px] text-[var(--ink)]"></p>
+        </div>
+      </div>
+    </div>
   </main>
 
-  <!-- BOTTOM NAVIGATION BAR -->
-  <nav class="bg-panelBg border-t border-white/10 px-2 py-2 flex justify-around items-center flex-shrink-0 z-20">
-    <button onclick="switchTab('chat')" id="nav-chat" class="nav-btn flex flex-col items-center gap-1 p-2 text-accentSage transition">
-      <i class="fa-solid fa-comments text-base"></i>
-      <span class="text-[10px] font-bold">대화</span>
-    </button>
-    <button onclick="switchTab('breathing')" id="nav-breathing" class="nav-btn flex flex-col items-center gap-1 p-2 text-subText hover:text-warmText transition">
-      <i class="fa-solid fa-wind text-base"></i>
-      <span class="text-[10px]">호흡케어</span>
-    </button>
-    <button onclick="switchTab('journal')" id="nav-journal" class="nav-btn flex flex-col items-center gap-1 p-2 text-subText hover:text-warmText transition">
-      <i class="fa-solid fa-book-bookmark text-base"></i>
-      <span class="text-[10px]">감정일기</span>
-    </button>
-    <button onclick="switchTab('grounding')" id="nav-grounding" class="nav-btn flex flex-col items-center gap-1 p-2 text-subText hover:text-warmText transition">
-      <i class="fa-solid fa-brain text-base"></i>
-      <span class="text-[10px]">그라운딩</span>
-    </button>
-    <button onclick="switchTab('crisis')" id="nav-crisis" class="nav-btn flex flex-col items-center gap-1 p-2 text-subText hover:text-warmText transition">
-      <i class="fa-solid fa-phone-volume text-base"></i>
-      <span class="text-[10px]">위기상담</span>
-    </button>
-  </nav>
-
-</div>
-
-<!-- JAVASCRIPT LOGIC -->
 <script>
+const SVGNS = "http://www.w3.org/2000/svg";
+function el(tag, attrs = {}, ...children){
+  const node = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) node.setAttribute(k, attrs[k]);
+  children.forEach(c => node.appendChild(c));
+  return node;
+}
+function polar(cx, cy, r, deg){
+  const rad = deg * Math.PI / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+function angleOf(cx, cy, px, py){
+  return Math.atan2(py - cy, px - cx) * 180 / Math.PI;
+}
+function dist(a, b){ return Math.hypot(a.x - b.x, a.y - b.y); }
+function mid(a, b){ return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; }
+function norm(deg){ let d = deg % 360; if (d < 0) d += 360; return d; }
 
-// API Key (Canvas automatically supplies key at runtime if empty string)
-const API_KEY = "";
+function arcPath(cx, cy, r, a1, a2){
+  let d = norm(a2 - a1);
+  let sweep = d > 180 ? 0 : 1;
+  const p1 = polar(cx, cy, r, a1);
+  const p2 = polar(cx, cy, r, a2);
+  return `M ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} A ${r} ${r} 0 0 ${sweep} ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
+}
+function rightAngleMark(V, a1, a2, size = 16){
+  const p1 = polar(V.x, V.y, size, a1);
+  const corner = polar(p1.x, p1.y, size, a2);
+  const p2 = polar(V.x, V.y, size, a2);
+  return `M ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} L ${corner.x.toFixed(2)} ${corner.y.toFixed(2)} L ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
+}
+function tickMarks(p1, p2, count, color){
+  const g = el("g");
+  const m = mid(p1, p2);
+  const angle = angleOf(p1.x, p1.y, p2.x, p2.y);
+  const perp = angle + 90;
+  const spacing = 7;
+  const start = -(count - 1) * spacing / 2;
+  for (let i = 0; i < count; i++){
+    const along = start + i * spacing;
+    const base = polar(m.x, m.y, along, angle);
+    const a = polar(base.x, base.y, 6, perp);
+    const b = polar(base.x, base.y, -6, perp);
+    g.appendChild(el("line", { x1:a.x, y1:a.y, x2:b.x, y2:b.y, stroke:color, "stroke-width":2.5, "stroke-linecap":"round" }));
+  }
+  return g;
+}
+function labelDot(p, text, opts = {}){
+  const g = el("g");
+  const dx = opts.dx ?? 0, dy = opts.dy ?? -14;
+  g.appendChild(el("circle", { cx:p.x, cy:p.y, r: opts.r ?? 4.5, fill: opts.fill ?? "var(--ink)" }));
+  g.appendChild(el("text", { x:p.x + dx, y:p.y + dy, "font-size": opts.fontSize ?? 16, "font-weight": 600, fill: opts.textColor ?? "var(--ink)", "text-anchor":"middle" }, document.createTextNode(text)));
+  return g;
+}
+function svgPoint(svg, evt){
+  const pt = svg.createSVGPoint();
+  pt.x = evt.clientX; pt.y = evt.clientY;
+  return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
+function lineEl(p1, p2, attrs = {}){
+  return el("line", Object.assign({ x1:p1.x, y1:p1.y, x2:p2.x, y2:p2.y, stroke:"var(--ink)", "stroke-width":2.5, "stroke-linecap":"round" }, attrs));
+}
+function pointOnSegment(p1, p2, t){ return { x: p1.x + (p2.x - p1.x) * t, y: p1.y + (p2.y - p1.y) * t }; }
 
-// State
-let conversationHistory = [];
-let isVoiceEnabled = false;
-let isRecognizing = false;
-let speechRecognitionObj = null;
+const svg = document.getElementById('canvas');
+const proofPanel = document.getElementById('proofPanel');
+const instructionText = document.getElementById('instructionText');
+const instructionSub = document.getElementById('instructionSub');
+const stepBadge = document.getElementById('stepBadge');
+const hintBtn = document.getElementById('hintBtn');
+const hintPanel = document.getElementById('hintPanel');
+const conclusionBox = document.getElementById('conclusionBox');
+const conclusionText = document.getElementById('conclusionText');
+const prevStepBtn = document.getElementById('prevStepBtn');
 
-// Crisis Resources Data
-const CRISIS_RESOURCES = [
-  { name: '자살예방 상담전화 (통합 109)', num: '109', desc: '24시간 · 전국 어디서나 익명 무료 상담', tag: '24시간' },
-  { name: '정신건강 위기상담전화', num: '1577-0199', desc: '24시간 · 정신건강 전문 상담원 연결', tag: '정신건강' },
-  { name: '청소년 상담전화 1388', num: '1388', desc: '24시간 · 청소년 및 보호자 문자/전화 상담', tag: '청소년' },
-  { name: '여성긴급전화 1366', num: '1366', desc: '24시간 · 가정폭력·성폭력·데이트폭력 긴급 지원', tag: '긴급보호' },
-  { name: '생명의 전화', num: '1588-9191', desc: '24시간 · 삶의 위기 및 우울증 상담', tag: '24시간' }
-];
+let currentTab = 1;
+let currentStep = 1;
+let stepHistory = [];
 
-// Initialize on Load
-window.onload = function() {
-  renderCrisisResources();
-  loadJournalEntries();
-  loadSafetyPlan();
-  initSpeechRecognition();
-
-  // Auto resize chat input
-  const chatInput = document.getElementById('chat-input');
-  chatInput.addEventListener('input', function() {
-    this.style.height = 'auto';
-    this.style.height = Math.min(this.scrollHeight, 112) + 'px';
-  });
-
-  chatInput.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleUserSend();
-    }
-  });
-};
-
-function switchTab(tabId) {
-  const views = ['chat', 'breathing', 'journal', 'grounding', 'crisis'];
-  views.forEach(v => {
-    const el = document.getElementById(`view-${v}`);
-    const nav = document.getElementById(`nav-${v}`);
-    if (v === tabId) {
-      el.classList.remove('hidden');
-      el.classList.add('flex');
-      nav.classList.add('text-accentSage');
-      nav.classList.remove('text-subText');
-    } else {
-      el.classList.add('hidden');
-      el.classList.remove('flex');
-      nav.classList.remove('text-accentSage');
-      nav.classList.add('text-subText');
-    }
-  });
+function renderMath(target = document.body){
+  if (window.renderMathInElement) {
+    window.renderMathInElement(target, {
+      delimiters: [
+        {left: "$$", right: "$$", display: true},
+        {left: "$", right: "$", display: false}
+      ],
+      throwOnError: false
+    });
+  }
 }
 
-function renderCrisisResources() {
-  const container = document.getElementById('crisis-list');
-  container.innerHTML = CRISIS_RESOURCES.map(r => `
-    <div class="bg-panelBg border border-white/10 rounded-2xl p-3.5 flex justify-between items-center gap-3">
-      <div>
-        <div class="flex items-center gap-2">
-          <span class="font-bold text-sm text-warmText">${r.name}</span>
-          <span class="text-[9px] bg-crisisCoral/20 text-crisisCoral px-1.5 py-0.5 rounded-full font-bold">${r.tag}</span>
-        </div>
-        <p class="text-[11px] text-subText mt-0.5">${r.desc}</p>
-      </div>
-      <a href="tel:${r.num.replace(/-/g,'')}" class="px-3 py-2 bg-crisisCoral text-white font-bold text-xs rounded-xl hover:bg-crisisCoral/80 transition whitespace-nowrap flex items-center gap-1 shadow-md">
-        <i class="fa-solid fa-phone"></i> ${r.num}
-      </a>
+function clearCanvas(){ svg.innerHTML = ''; }
+function clearProof(){ proofPanel.innerHTML = ''; conclusionBox.classList.add('hidden'); }
+
+function setInstruction(step, main, sub, hint){
+  currentStep = step;
+  stepBadge.textContent = step;
+  stepBadge.className = 'dim-badge active';
+  instructionText.innerHTML = main;
+  instructionSub.innerHTML = sub || '';
+  hintPanel.classList.add('hidden');
+  hintPanel.innerHTML = hint || '';
+  hintBtn.classList.toggle('hidden', !hint);
+  renderMath(instructionText);
+  renderMath(instructionSub);
+  renderMath(hintPanel);
+}
+
+function toggleHint(){ hintPanel.classList.toggle('hidden'); }
+hintBtn.addEventListener('click', toggleHint);
+
+function markStepDone(){
+  stepBadge.classList.remove('active');
+  stepBadge.classList.add('done');
+  stepBadge.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i>';
+  lucide.createIcons();
+}
+
+function addProofLine(num, formula, note){
+  const line = document.createElement('div');
+  line.className = 'proof-line active pop-in';
+  line.id = `proof-step-${num}`;
+  line.innerHTML = `
+    <div class="flex items-baseline gap-2">
+      <span class="font-mono text-[11px] text-[var(--ink-faint)]">STEP ${num}</span>
     </div>
-  `).join('');
-}
-
-async function handleUserSend() {
-  const inputEl = document.getElementById('chat-input');
-  const userText = inputEl.value.trim();
-  if (!userText) return;
-
-  inputEl.value = '';
-  inputEl.style.height = 'auto';
-
-  // Render User Message
-  appendChatMessage('user', userText);
-
-  // Push to context
-  conversationHistory.push({ role: 'user', parts: [{ text: userText }] });
-
-  // Toggle UI state
-  document.getElementById('chat-send-btn').disabled = true;
-  document.getElementById('chat-typing').classList.remove('hidden');
-
-  try {
-    const aiResponse = await fetchGeminiChatResponse(conversationHistory);
-    document.getElementById('chat-typing').classList.add('hidden');
-
-    // Append AI Response
-    appendChatMessage('ai', aiResponse.reply, aiResponse.emotion, aiResponse.suggestedExercise);
-
-    // Save turn to history
-    conversationHistory.push({ role: 'model', parts: [{ text: aiResponse.reply }] });
-
-    // Handle Risk Level
-    if (aiResponse.riskLevel === 'crisis') {
-      appendSysNotice('⚠️ 현재 상황이 많이 힘겹게 느껴지실 수 있습니다. 안전을 위해 전문가의 도움을 바로 연결해드릴게요.');
-      setTimeout(() => switchTab('crisis'), 1500);
-    }
-
-    // Audio Playback if TTS active
-    if (isVoiceEnabled && aiResponse.reply) {
-      speakResponseTTS(aiResponse.reply);
-    }
-
-  } catch (error) {
-    console.error('Gemini API Error:', error);
-    document.getElementById('chat-typing').classList.add('hidden');
-    appendChatMessage('ai', '지금 대화 연결이 잠시 고르지 않네요. 괜찮으시다면 방금 해주신 이야기를 다시 한 번 알려주시겠어요?');
-  } finally {
-    document.getElementById('chat-send-btn').disabled = false;
-  }
-}
-
-function sendQuickPrompt(promptText) {
-  document.getElementById('chat-input').value = promptText;
-  handleUserSend();
-}
-
-async function fetchGeminiChatResponse(history) {
-  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${API_KEY}`;
-
-  const systemPrompt = `
-당신은 한국의 따뜻하고 심리적 안정감을 제공하는 AI 정서 지지 대화 상대 "마음온"입니다.
-다음 지침을 엄격히 따라 응답하세요:
-
-1. **역할 및 태도**:
-   - 비심판적이고 비판 없는 따뜻한 경청자 태도를 유지합니다.
-   - 내담자의 감정을 있는 그대로 수용하고(검증 및 공감), 따뜻한 존댓말을 사용합니다.
-   - 진단, 약물 처방, 의학적/전문 치료 판정을 절대 내리지 않습니다.
-
-2. **구조화된 출력 (JSON)**:
-   반드시 다음 JSON 형식에 맞추어 출력해야 합니다:
-   {
-     "reply": "공감과 따뜻함을 담은 2~4문장의 내담자 맞춤 응답",
-     "emotion": "내담자의 핵심 감정 단어 (우울, 불안, 분노, 외로움, 평온, 희망 등)",
-     "riskLevel": "위기 수준 Assessment (none, watch, crisis 중 하나)",
-     "suggestedExercise": "추천 케어 (none, breathing, journal, grounding, crisis 중 하나)"
-   }
-
-3. **위기 감지 (Risk Level)**:
-   - 자해, 자살 시도/생각, 구체적 수단 언급, 극단적 절망이나 학대/폭력 노출 시 riskLevel을 "crisis"로 지정합니다.
-   - "crisis" 판단 시 reply는 위기상담 연결을 차분히 유도하는 안심 문장으로 구성합니다.
-`;
-
-  const payload = {
-    contents: history,
-    systemInstruction: {
-      parts: [{ text: systemPrompt }]
-    },
-    generationConfig: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: "OBJECT",
-        properties: {
-          reply: { type: "STRING" },
-          emotion: { type: "STRING" },
-          riskLevel: { type: "STRING", enum: ["none", "watch", "crisis"] },
-          suggestedExercise: { type: "STRING", enum: ["none", "breathing", "journal", "grounding", "crisis"] }
-        },
-        required: ["reply", "emotion", "riskLevel", "suggestedExercise"]
-      }
-    }
-  };
-
-  const response = await fetchWithRetry(apiUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-
-  const data = await response.json();
-  const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  return JSON.parse(rawText);
-}
-
-// Exponential Backoff Fetch
-async function fetchWithRetry(url, options, retries = 3, backoff = 1000) {
-  for (let i = 0; i < retries; i++) {
-    try {
-      const res = await fetch(url, options);
-      if (res.ok) return res;
-    } catch (err) {
-      if (i === retries - 1) throw err;
-    }
-    await new Promise(r => setTimeout(r, backoff * Math.pow(2, i)));
-  }
-}
-
-function appendChatMessage(role, text, emotion = null, exercise = null) {
-  const container = document.getElementById('chat-messages');
-  const msgWrapper = document.createElement('div');
-  msgWrapper.className = `flex gap-3 max-w-[88%] animate-slide-up ${role === 'user' ? 'ml-auto flex-row-reverse' : ''}`;
-
-  if (role === 'user') {
-    msgWrapper.innerHTML = `
-      <div class="w-8 h-8 rounded-full bg-slate-700 text-warmText flex items-center justify-center flex-shrink-0 text-xs">
-        <i class="fa-solid fa-user"></i>
-      </div>
-      <div class="space-y-1">
-        <div class="bg-panelBg border border-white/10 p-3.5 rounded-2xl rounded-tr-none text-sm text-warmText leading-relaxed shadow-sm">
-          ${escapeHtml(text)}
-        </div>
-      </div>
-    `;
-  } else {
-    let exerciseBtnHtml = '';
-    if (exercise === 'breathing') {
-      exerciseBtnHtml = `<button onclick="switchTab('breathing')" class="mt-2.5 px-3 py-1.5 bg-accentSage/20 text-accentSage border border-accentSage/40 rounded-xl text-xs font-bold hover:bg-accentSage/30 transition flex items-center gap-1.5"><i class="fa-solid fa-wind"></i> 4-7-8 이완 호흡 시작하기</button>`;
-    } else if (exercise === 'grounding') {
-      exerciseBtnHtml = `<button onclick="switchTab('grounding')" class="mt-2.5 px-3 py-1.5 bg-accentSage/20 text-accentSage border border-accentSage/40 rounded-xl text-xs font-bold hover:bg-accentSage/30 transition flex items-center gap-1.5"><i class="fa-solid fa-brain"></i> 5-4-3-2-1 그라운딩하기</button>`;
-    }
-
-    let emotionBadge = emotion ? `<span class="inline-block text-[10px] bg-accentSage/10 text-accentSage border border-accentSage/20 px-2 py-0.5 rounded-full mb-1.5">감정: ${escapeHtml(emotion)}</span><br>` : '';
-
-    msgWrapper.innerHTML = `
-      <div class="w-8 h-8 rounded-full bg-accentSage/20 text-accentSage flex items-center justify-center flex-shrink-0 border border-accentSage/30">
-        <i class="fa-solid fa-leaf text-sm"></i>
-      </div>
-      <div class="space-y-1">
-        <div class="bg-panelBg border border-white/10 p-3.5 rounded-2xl rounded-tl-none text-sm text-warmText leading-relaxed shadow-sm">
-          ${emotionBadge}
-          ${escapeHtml(text)}
-          ${exerciseBtnHtml}
-        </div>
-        <div class="flex items-center gap-2 px-1">
-          <button onclick="speakResponseTTS('${escapeJsString(text)}')" class="text-[10px] text-subText hover:text-accentSage flex items-center gap-1">
-            <i class="fa-solid fa-volume-high"></i> 음성 듣기
-          </button>
-        </div>
-      </div>
-    `;
-  }
-
-  container.appendChild(msgWrapper);
-  container.scrollTop = container.scrollHeight;
-}
-
-function appendSysNotice(text) {
-  const container = document.getElementById('chat-messages');
-  const div = document.createElement('div');
-  div.className = 'my-2 p-3 bg-crisisCoral/10 border border-crisisCoral/30 rounded-xl text-xs text-crisisCoral text-center font-bold animate-slide-up';
-  div.innerText = text;
-  container.appendChild(div);
-  container.scrollTop = container.scrollHeight;
-}
-
-function clearChatHistory() {
-  conversationHistory = [];
-  const container = document.getElementById('chat-messages');
-  container.innerHTML = `
-    <div class="flex gap-3 max-w-[88%] animate-slide-up">
-      <div class="w-8 h-8 rounded-full bg-accentSage/20 text-accentSage flex items-center justify-center flex-shrink-0 border border-accentSage/30">
-        <i class="fa-solid fa-leaf text-sm"></i>
-      </div>
-      <div class="space-y-1">
-        <div class="bg-panelBg border border-white/10 p-3.5 rounded-2xl rounded-tl-none text-sm text-warmText leading-relaxed shadow-sm">
-          새로운 대화를 시작합니다. 오늘 어떤 마음을 나누고 싶으신가요? 🌱
-        </div>
-      </div>
-    </div>
+    <p class="font-mono text-[14px] font-600 mt-0.5">${formula}</p>
+    <p class="text-[12.5px] text-[var(--ink-soft)] mt-0.5">${note}</p>
   `;
+  Array.from(proofPanel.children).forEach(c => c.classList.remove('active'));
+  proofPanel.appendChild(line);
+  proofPanel.scrollTop = proofPanel.scrollHeight;
+  renderMath(line);
 }
 
-function toggleTTS() {
-  isVoiceEnabled = !isVoiceEnabled;
-  const btnIcon = document.getElementById('tts-icon');
-  const btnStatus = document.getElementById('tts-status');
-
-  if (isVoiceEnabled) {
-    btnIcon.className = 'fa-solid fa-volume-high text-accentSage';
-    btnStatus.innerText = '음성 켬';
-  } else {
-    btnIcon.className = 'fa-solid fa-volume-xmark text-slate-400';
-    btnStatus.innerText = '음성 끔';
+function removeProofLinesFrom(stepNum){
+  for(let i = stepNum; i <= 6; i++){
+    const el = document.getElementById(`proof-step-${i}`);
+    if(el) el.remove();
   }
+  conclusionBox.classList.add('hidden');
 }
 
-async function speakResponseTTS(text) {
-  try {
-    const ttsUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${API_KEY}`;
-    const payload = {
-      contents: [{
-        parts: [{ text: "차분하고 따뜻한 목소리로 읽어주세요: " + text }]
-      }],
-      generationConfig: {
-        responseModalities: ["AUDIO"],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: "Sulafat" } // Soft calming voice
-          }
-        }
-      }
-    };
+function showConclusion(mathText){
+  conclusionText.innerHTML = mathText;
+  conclusionBox.classList.remove('hidden');
+  renderMath(conclusionBox);
+  lucide.createIcons();
+}
 
-    const res = await fetch(ttsUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+function shakeEl(node){
+  node.classList.remove('shake');
+  void node.offsetWidth;
+  node.classList.add('shake');
+}
+
+function buildQuiz(container, question, options, correctCheck, onCorrect){
+  const wrap = document.createElement('div');
+  wrap.className = 'pop-in mt-2';
+  const q = document.createElement('p');
+  q.className = 'text-[13px] font-600 mb-2.5';
+  q.innerHTML = question;
+  renderMath(q);
+  wrap.appendChild(q);
+
+  const btnRow = document.createElement('div');
+  btnRow.className = 'flex flex-wrap gap-2';
+  let answered = false;
+  options.forEach((opt, i) => {
+    const b = document.createElement('button');
+    b.className = 'quiz-btn focus-ring';
+    b.textContent = opt;
+    b.addEventListener('click', () => {
+      if (answered) return;
+      const isCorrect = typeof correctCheck === 'function' ? correctCheck(opt, i) : (i === correctCheck);
+      if (isCorrect){
+        answered = true;
+        b.classList.add('correct');
+        Array.from(btnRow.children).forEach(x => x.disabled = true);
+        setTimeout(() => onCorrect(opt), 350);
+      } else {
+        b.classList.add('wrong');
+        shakeEl(b);
+        setTimeout(() => b.classList.remove('wrong'), 500);
+      }
+    });
+    btnRow.appendChild(b);
+  });
+  wrap.appendChild(btnRow);
+  container.appendChild(wrap);
+  return wrap;
+}
+
+function initTab1(startStep = 1){
+  clearCanvas(); clearProof();
+  const A = {x:320,y:64}, B = {x:150,y:380}, C = {x:490,y:380};
+  const D = mid(B,C);
+
+  const mainGroup = el('g');
+  svg.appendChild(mainGroup);
+
+  const gLeft = el('g');
+  const gRight = el('g');
+  mainGroup.appendChild(gLeft);
+  mainGroup.appendChild(gRight);
+
+  let arcB_el = null, arcC_el = null;
+
+  function renderBaseTriangle(){
+    gLeft.innerHTML = ''; gRight.innerHTML = '';
+    gLeft.appendChild(lineEl(A,B));
+    gLeft.appendChild(lineEl(B,D));
+    gLeft.appendChild(tickMarks(A,B,1,'var(--blue)'));
+    gLeft.appendChild(labelDot(A,'A',{dy:-12}));
+    gLeft.appendChild(labelDot(B,'B',{dx:-14,dy:6}));
+
+    gRight.appendChild(lineEl(A,C));
+    gRight.appendChild(lineEl(D,C));
+    gRight.appendChild(tickMarks(A,C,1,'var(--blue)'));
+    gRight.appendChild(labelDot(A,'A',{dy:-12}));
+    gRight.appendChild(labelDot(C,'C',{dx:14,dy:6}));
+  }
+
+  function step1(){
+    removeProofLinesFrom(1);
+    renderBaseTriangle();
+    setInstruction(1, '밑변 $BC$의 <strong>가운데 점(중점)</strong>을 콕 눌러보세요', '점 $B$와 점 $C$ 딱 중간에 있는 위치를 찾아보세요.', '선분 $BC$의 정중앙에 있는 점을 클릭하면 점 $D$가 표시됩니다.');
+    
+    const zone = el('line', {x1:B.x,y1:B.y,x2:C.x,y2:C.y,stroke:'transparent','stroke-width':30, class:'grabbable focus-ring', tabindex:'0'});
+    svg.appendChild(zone);
+
+    const guideDots = el('g');
+    svg.appendChild(guideDots);
+    [0.25, 0.5, 0.75].forEach(t => {
+      const p = pointOnSegment(B,C,t);
+      guideDots.appendChild(el('circle',{cx:p.x,cy:p.y,r:5,fill:'var(--paper-edge)'}));
     });
 
-    const data = await res.json();
-    const part = data?.candidates?.[0]?.content?.parts?.[0];
-    const audioBase64 = part?.inlineData?.data;
-    const mimeType = part?.inlineData?.mimeType || '';
+    function pickMid(pt){
+      const t = (pt.x - B.x) / (C.x - B.x);
+      if (Math.abs(t - 0.5) < 0.1){
+        guideDots.remove(); zone.remove();
+        addProofLine(1, '$\\overline{BD} = \\overline{CD}$', '밑변의 중점 $D$를 잡았습니다');
+        markStepDone();
+        step2();
+      } else {
+        shakeEl(guideDots);
+      }
+    }
+    zone.addEventListener('pointerdown', (e) => pickMid(svgPoint(svg, e)));
+  }
 
-    if (audioBase64) {
-      const match = mimeType.match(/rate=(\d+)/);
-      const sampleRate = match ? parseInt(match[1], 10) : 24000;
+  function step2(){
+    removeProofLinesFrom(2);
+    renderBaseTriangle();
+    gLeft.appendChild(tickMarks(B,D,1,'var(--orange)'));
+    gRight.appendChild(tickMarks(D,C,1,'var(--orange)'));
+    gLeft.appendChild(labelDot(D,'D',{dx:-10,dy:22}));
+    gRight.appendChild(labelDot(D,'D',{dx:10,dy:22}));
+
+    setInstruction(2, '꼭짓점 $A$를 잡고 점 $D$까지 <strong>선을 쭉 그어보세요</strong>', '위쪽 꼭짓점 $A$에서 아래 중점 $D$로 보조선을 연결합니다.', '파란 원을 누른 채로 아래 점 $D$까지 끌어당기세요.');
+    
+    const handle = el('circle',{cx:A.x,cy:A.y,r:11,fill:'var(--teal)',opacity:0.85,class:'grabbable'});
+    svg.appendChild(handle);
+    let dragLine = null, dragging = false;
+
+    handle.addEventListener('pointerdown', (e)=>{
+      dragging = true;
+      handle.setPointerCapture(e.pointerId);
+      dragLine = lineEl(A,A,{stroke:'var(--violet)','stroke-dasharray':'5 5'});
+      svg.insertBefore(dragLine, handle);
+    });
+    handle.addEventListener('pointermove', (e)=>{
+      if(!dragging) return;
+      const p = svgPoint(svg,e);
+      dragLine.setAttribute('x2', p.x); dragLine.setAttribute('y2', p.y);
+    });
+    handle.addEventListener('pointerup', (e)=>{
+      dragging = false;
+      const p = svgPoint(svg,e);
+      if (dist(p, D) < 35){
+        dragLine.remove(); handle.remove();
+        gLeft.appendChild(lineEl(A,D,{stroke:'var(--violet)'}));
+        gRight.appendChild(lineEl(A,D,{stroke:'var(--violet)'}));
+        addProofLine(2, '$\\overline{AD}$는 공통', '보조선 $AD$를 그어 두 개의 삼각형으로 나누었습니다');
+        markStepDone();
+        step3();
+      } else {
+        dragLine.remove();
+        shakeEl(handle);
+      }
+    });
+  }
+
+  function step3(){
+    removeProofLinesFrom(3);
+    renderBaseTriangle();
+    gLeft.appendChild(tickMarks(B,D,1,'var(--orange)')); gRight.appendChild(tickMarks(D,C,1,'var(--orange)'));
+    gLeft.appendChild(lineEl(A,D,{stroke:'var(--violet)'})); gRight.appendChild(lineEl(A,D,{stroke:'var(--violet)'}));
+    gLeft.appendChild(labelDot(D,'D',{dx:-10,dy:22})); gRight.appendChild(labelDot(D,'D',{dx:10,dy:22}));
+
+    setInstruction(3, '슬라이더를 오른쪽으로 밀어 <strong>두 삼각형을 벌려보세요</strong>', '두 삼각형의 세 변이 각각 같은지 직접 눈으로 비교합니다.', '슬라이더를 끝까지 밀면 두 삼각형이 분리되며 서로 같은 변이 명확히 보입니다.');
+
+    const sliderFO = el('foreignObject',{x:170, y:415, width:300, height:40});
+    sliderFO.innerHTML = `<input type="range" min="0" max="100" value="0" style="width:100%" class="focus-ring" id="splitSlider">`;
+    svg.appendChild(sliderFO);
+
+    const slider = sliderFO.querySelector('#splitSlider');
+    let btnAdded = false;
+
+    slider.addEventListener('input', ()=>{
+      const v = slider.value / 100;
+      const shift = 60 * v;
+      gLeft.setAttribute('transform', `translate(${-shift}, ${-shift*0.25})`);
+      gRight.setAttribute('transform', `translate(${shift}, ${-shift*0.25})`);
+      if (v > 0.6 && !btnAdded){
+        btnAdded = true;
+        showSplitConfirm();
+      }
+    });
+
+    function showSplitConfirm(){
+      const fo = el('foreignObject',{x:220,y:230,width:200,height:44});
+      fo.innerHTML = `<button id="confirmSplit" class="quiz-btn focus-ring" style="background:var(--ink);color:white;border-color:var(--ink);width:100%">세 변의 길이 일치 확인 →</button>`;
+      svg.appendChild(fo);
+      fo.querySelector('#confirmSplit').addEventListener('click', ()=>{
+        addProofLine(3, '$\\overline{AB}=\\overline{AC},\\; \\overline{BD}=\\overline{CD},\\; \\overline{AD}$ 공통', '세 쌍의 대응변의 길이가 모두 같습니다');
+        markStepDone();
+        fo.remove(); sliderFO.remove();
+        step4();
+      });
+    }
+  }
+
+  function step4(){
+    removeProofLinesFrom(4);
+    setInstruction(4, '두 삼각형 $\\triangle ABD$와 $\\triangle ACD$의 <strong>합동 조건</strong>은 무엇일까요?', '세 변의 길이가 각각 같을 때 사용하는 조건입니다.', '세 변(Side)이 같으므로 SSS 합동입니다.');
+    
+    buildQuiz(proofPanel, '$\\triangle ABD \\equiv \\triangle ACD$ 합동 조건은?', ['SSS','SAS','ASA','RHS'], 0, ()=>{
+      addProofLine(4, '$\\triangle ABD \\equiv \\triangle ACD$ (SSS 합동)', '합동인 두 도형은 대응각의 크기가 서로 같습니다');
       
-      const pcmBuffer = base64ToArrayBuffer(audioBase64);
-      const pcm16 = new Int16Array(pcmBuffer);
-      const wavBlob = pcmToWav(pcm16, sampleRate);
-      const audioUrl = URL.createObjectURL(wavBlob);
-      
-      const audio = new Audio(audioUrl);
-      audio.play();
+      // 분리된 각 삼각형 내부 좌표계에 호를 배치하여 위치 어긋남 방지
+      arcB_el = el('path', {d: arcPath(B.x,B.y,26, angleOf(B.x,B.y,D.x,D.y), angleOf(B.x,B.y,A.x,A.y)), stroke:'var(--amber)', 'stroke-width':3, fill:'none', class:'pulse-glow'});
+      arcC_el = el('path', {d: arcPath(C.x,C.y,26, angleOf(C.x,C.y,A.x,A.y), angleOf(C.x,C.y,D.x,D.y)), stroke:'var(--amber)', 'stroke-width':3, fill:'none', class:'pulse-glow'});
+      gLeft.appendChild(arcB_el);
+      gRight.appendChild(arcC_el);
+
+      showConclusion('$\\angle B = \\angle C$ (이등변삼각형의 두 밑각의 크기는 같다)');
+      markStepDone();
+    });
+  }
+
+  stepHistory = [step1, step2, step3, step4];
+  stepHistory[startStep - 1]();
+}
+
+function initTab2(startStep = 1){
+  clearCanvas(); clearProof();
+  const A = {x:320,y:64}, B = {x:150,y:380}, C = {x:490,y:380};
+  const D = mid(B,C);
+
+  const gTri = el('g');
+  svg.appendChild(gTri);
+
+  function renderBase(){
+    gTri.innerHTML = '';
+    gTri.appendChild(lineEl(A,B)); gTri.appendChild(lineEl(A,C)); gTri.appendChild(lineEl(B,C));
+    gTri.appendChild(el('path',{d:arcPath(B.x,B.y,24, angleOf(B.x,B.y,C.x,C.y), angleOf(B.x,B.y,A.x,A.y)), stroke:'var(--blue)','stroke-width':2.5, fill:'none'}));
+    gTri.appendChild(el('path',{d:arcPath(C.x,C.y,24, angleOf(C.x,C.y,A.x,A.y), angleOf(C.x,C.y,B.x,B.y)), stroke:'var(--blue)','stroke-width':2.5, fill:'none'}));
+    gTri.appendChild(labelDot(A,'A',{dy:-12}));
+    gTri.appendChild(labelDot(B,'B',{dx:-14,dy:6}));
+    gTri.appendChild(labelDot(C,'C',{dx:14,dy:6}));
+  }
+
+  function step1(){
+    removeProofLinesFrom(1);
+    renderBase();
+    setInstruction(1, '슬라이더를 조절해 <strong>$\\angle A$를 반으로 똑같이 나누는 선</strong>을 그어보세요', '$\\angle BAD = \\angle CAD$가 되도록 슬라이더를 정가운데로 맞춰보세요.', '슬라이더를 50 위치로 맞추면 꼭지각을 이등분합니다.');
+
+    const sliderFO = el('foreignObject',{x:170,y:150,width:300,height:40});
+    sliderFO.innerHTML = `<input type="range" min="0" max="100" value="20" style="width:100%" class="focus-ring" id="bisectSlider">`;
+    svg.appendChild(sliderFO);
+    const slider = sliderFO.querySelector('#bisectSlider');
+
+    const dragLine = lineEl(A, pointOnSegment(B,C, 0.2), {stroke:'var(--violet)', 'stroke-width':2.5, 'stroke-dasharray':'6 4'});
+    svg.appendChild(dragLine);
+    const previewDot = el('circle', {cx:pointOnSegment(B,C,0.2).x, cy:pointOnSegment(B,C,0.2).y, r:6, fill:'var(--violet)'});
+    svg.appendChild(previewDot);
+
+    slider.addEventListener('input', ()=>{
+      const p = pointOnSegment(B,C, slider.value/100);
+      dragLine.setAttribute('x2', p.x); dragLine.setAttribute('y2', p.y);
+      previewDot.setAttribute('cx', p.x); previewDot.setAttribute('cy', p.y);
+    });
+
+    const confirmFO = el('foreignObject',{x:250,y:395,width:140,height:40});
+    confirmFO.innerHTML = `<button id="bisectConfirm" class="quiz-btn focus-ring" style="width:100%">이 각도로 확정</button>`;
+    svg.appendChild(confirmFO);
+
+    confirmFO.querySelector('#bisectConfirm').addEventListener('click', ()=>{
+      const t = slider.value/100;
+      if (Math.abs(t - 0.5) < 0.06){
+        sliderFO.remove(); confirmFO.remove(); dragLine.remove(); previewDot.remove();
+        addProofLine(1, '$\\angle BAD = \\angle CAD$', '꼭지각 $\\angle A$의 이등분선을 그었습니다');
+        markStepDone();
+        step2();
+      } else {
+        shakeEl(dragLine);
+      }
+    });
+  }
+
+  function step2(){
+    removeProofLinesFrom(2);
+    renderBase();
+    gTri.appendChild(lineEl(A,D,{stroke:'var(--violet)'}));
+    gTri.appendChild(labelDot(D,'D',{dx:0,dy:22}));
+    const a1 = angleOf(A.x,A.y,B.x,B.y), a2 = angleOf(A.x,A.y,D.x,D.y), a3 = angleOf(A.x,A.y,C.x,C.y);
+    gTri.appendChild(el('path',{d:arcPath(A.x,A.y,22,a1,a2), stroke:'var(--orange)','stroke-width':2.5, fill:'none'}));
+    gTri.appendChild(el('path',{d:arcPath(A.x,A.y,22,a2,a3), stroke:'var(--orange)','stroke-width':2.5, fill:'none'}));
+
+    setInstruction(2, '슬라이더를 움직여 <strong>$\\angle ADB$의 크기가 $90^\\circ$</strong>가 되는지 확인해보세요', '그림 위의 실시간 각도 표시를 보며 직각이 되는 지점을 맞춰보세요.', '슬라이더를 $90^\\circ$ 위치로 맞추면 수직이 됨을 확인할 수 있습니다.');
+
+    // 캔버스 상 실시간 각도 표시용 그룹
+    const dynAngleG = el('g');
+    svg.appendChild(dynAngleG);
+
+    const sliderFO = el('foreignObject',{x:170,y:140,width:300,height:56});
+    sliderFO.innerHTML = `
+      <div style="background:white; padding:8px 12px; border-radius:10px; border:1px solid var(--paper-edge); text-align:center;">
+        <input type="range" min="60" max="120" value="78" style="width:100%" class="focus-ring" id="adbSlider">
+        <p class="text-[12px] font-mono mt-1" style="color:var(--ink-soft)">조절 중: $\\angle ADB = $ <span id="valTxt" class="font-bold text-[var(--teal-dark)]">78°</span></p>
+      </div>`;
+    svg.appendChild(sliderFO);
+    const slider = sliderFO.querySelector('#adbSlider');
+    const valTxt = sliderFO.querySelector('#valTxt');
+
+    function updateAngles(deg){
+      valTxt.textContent = `${deg}°`;
+      dynAngleG.innerHTML = '';
+      const leftDeg = deg;
+      const rightDeg = 180 - deg;
+
+      if (deg === 90){
+        const a1 = angleOf(D.x,D.y,B.x,B.y), a2=angleOf(D.x,D.y,A.x,A.y), a3=angleOf(D.x,D.y,C.x,C.y);
+        dynAngleG.appendChild(el('path',{d:rightAngleMark(D,a2,a1,15), stroke:'var(--teal)','stroke-width':2.2, fill:'none'}));
+        dynAngleG.appendChild(el('path',{d:rightAngleMark(D,a3,a2,15), stroke:'var(--teal)','stroke-width':2.2, fill:'none'}));
+      } else {
+        dynAngleG.appendChild(el('path',{d:arcPath(D.x,D.y,24, 180, 180 + leftDeg), stroke:'var(--teal)','stroke-width':2.2, fill:'none'}));
+        dynAngleG.appendChild(el('path',{d:arcPath(D.x,D.y,24, 180 + leftDeg, 360), stroke:'var(--coral)','stroke-width':2.2, fill:'none'}));
+      }
+
+      // 캔버스 상 텍스트로 83°, 97° 등 수치 바로 띄우기
+      dynAngleG.appendChild(el('text',{x:D.x - 30, y:D.y - 12, 'font-size':13, 'font-weight':700, fill:'var(--teal-dark)', 'text-anchor':'middle'}, document.createTextNode(`${leftDeg}°`)));
+      dynAngleG.appendChild(el('text',{x:D.x + 30, y:D.y - 12, 'font-size':13, 'font-weight':700, fill:'var(--coral)', 'text-anchor':'middle'}, document.createTextNode(`${rightDeg}°`)));
     }
-  } catch (e) {
-    console.error('TTS playback error:', e);
-  }
-}
+    slider.addEventListener('input', () => updateAngles(+slider.value));
+    updateAngles(78);
 
-function base64ToArrayBuffer(base64) {
-  const binaryString = atob(base64);
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes.buffer;
-}
+    const okFO = el('foreignObject',{x:250,y:210,width:140,height:40});
+    okFO.innerHTML = `<button class="quiz-btn focus-ring" style="width:100%">확인</button>`;
+    svg.appendChild(okFO);
 
-function pcmToWav(pcm16Data, sampleRate = 24000) {
-  const numChannels = 1;
-  const byteRate = sampleRate * numChannels * 2;
-  const blockAlign = numChannels * 2;
-  const dataSize = pcm16Data.length * 2;
-  const buffer = new ArrayBuffer(44 + dataSize);
-  const view = new DataView(buffer);
-
-  /* RIFF chunk descriptor */
-  writeString(view, 0, 'RIFF');
-  view.setUint32(4, 36 + dataSize, true);
-  writeString(view, 8, 'WAVE');
-  /* fmt subchunk */
-  writeString(view, 12, 'fmt ');
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true); // PCM
-  view.setUint16(22, numChannels, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, byteRate, true);
-  view.setUint16(32, blockAlign, true);
-  view.setUint16(34, 16, true); // BitsPerSample
-  /* data subchunk */
-  writeString(view, 36, 'data');
-  view.setUint32(40, dataSize, true);
-
-  let offset = 44;
-  for (let i = 0; i < pcm16Data.length; i++, offset += 2) {
-    view.setInt16(offset, pcm16Data[i], true);
+    okFO.querySelector('button').addEventListener('click', ()=>{
+      if (+slider.value === 90){
+        sliderFO.remove(); okFO.remove(); dynAngleG.remove();
+        const a1 = angleOf(D.x,D.y,B.x,B.y), a2=angleOf(D.x,D.y,A.x,A.y), a3=angleOf(D.x,D.y,C.x,C.y);
+        gTri.appendChild(el('path',{d:rightAngleMark(D,a2,a1,14), stroke:'var(--teal)','stroke-width':2.2, fill:'none'}));
+        gTri.appendChild(el('path',{d:rightAngleMark(D,a3,a2,14), stroke:'var(--teal)','stroke-width':2.2, fill:'none'}));
+        addProofLine(2, '$\\angle ADB = \\angle ADC = 90^\\circ$', '삼각형 내각의 합($180^\\circ$)에 의해 양쪽 각은 모두 $90^\\circ$입니다');
+        markStepDone();
+        step3();
+      } else {
+        shakeEl(sliderFO);
+      }
+    });
   }
 
-  return new Blob([buffer], { type: 'audio/wav' });
-}
+  function step3(){
+    removeProofLinesFrom(3);
+    setInstruction(3, '두 삼각형이 함께 공유하고 있는 <strong>가운데 변 $AD$</strong>를 클릭해보세요', '두 삼각형 $\\triangle ABD$와 $\\triangle ACD$가 맞닿아 있는 공통변입니다.', '가운데 보조선 $AD$를 누르면 공통변으로 지정됩니다.');
 
-function writeString(view, offset, string) {
-  for (let i = 0; i < string.length; i++) {
-    view.setUint8(offset + i, string.charCodeAt(i));
+    const adLine = el('line',{x1:A.x,y1:A.y,x2:D.x,y2:D.y, stroke:'transparent','stroke-width':24, class:'clickable-target focus-ring', tabindex:'0'});
+    svg.appendChild(adLine);
+    adLine.addEventListener('pointerdown', ()=>{
+      gTri.appendChild(lineEl(A,D,{stroke:'var(--violet)','stroke-width':3.5}));
+      adLine.remove();
+      addProofLine(3, '$\\overline{AD}$는 공통', '두 삼각형이 변 $AD$를 한 변으로 공유합니다');
+      markStepDone();
+      step4();
+    });
   }
-}
 
-function initSpeechRecognition() {
-  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    speechRecognitionObj = new SpeechRecognition();
-    speechRecognitionObj.lang = 'ko-KR';
-    speechRecognitionObj.continuous = false;
-    speechRecognitionObj.interimResults = false;
-
-    speechRecognitionObj.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      document.getElementById('chat-input').value = transcript;
-      toggleSpeechRecognition();
-    };
-
-    speechRecognitionObj.onerror = () => {
-      toggleSpeechRecognition();
-    };
-
-    speechRecognitionObj.onend = () => {
-      if (isRecognizing) toggleSpeechRecognition();
-    };
-  } else {
-    document.getElementById('mic-btn').style.display = 'none';
+  function step4(){
+    removeProofLinesFrom(4);
+    setInstruction(4, '한 변과 그 양 끝각이 같으므로 <strong>두 삼각형의 합동 조건</strong>은 무엇일까요?', '변 $AD$와 그 양 끝의 두 각이 각각 같습니다.', '한 변(Side)과 양 끝 두 각(Angle)이 같으므로 ASA 합동입니다.');
+    
+    buildQuiz(proofPanel, '$\\triangle ABD \\equiv \\triangle ACD$ 합동 조건은?', ['SSS','SAS','ASA','RHA'], 2, ()=>{
+      addProofLine(4, '$\\triangle ABD \\equiv \\triangle ACD$ (ASA 합동)', '합동이므로 대응하는 두 빗변의 길이가 같습니다');
+      const g = el('g');
+      g.appendChild(tickMarks(A,B,1,'var(--amber)'));
+      g.appendChild(tickMarks(A,C,1,'var(--amber)'));
+      svg.appendChild(g);
+      g.classList.add('pulse-glow');
+      showConclusion('$\\overline{AB} = \\overline{AC}$ (두 내각의 크기가 같으면 이등변삼각형이다)');
+      markStepDone();
+    });
   }
+
+  stepHistory = [step1, step2, step3, step4];
+  stepHistory[startStep - 1]();
 }
 
-function toggleSpeechRecognition() {
-  if (!speechRecognitionObj) return;
-  const micIcon = document.getElementById('mic-icon');
-  
-  if (isRecognizing) {
-    speechRecognitionObj.stop();
-    isRecognizing = false;
-    micIcon.className = 'fa-solid fa-microphone text-subText';
-  } else {
-    speechRecognitionObj.start();
-    isRecognizing = true;
-    micIcon.className = 'fa-solid fa-microphone text-crisisCoral animate-pulse';
+function initTab3(startStep = 1){
+  clearCanvas(); clearProof();
+  const A = {x:270,y:90}, B = {x:80,y:330}, C = {x:270,y:330};
+  const D0 = {x:390,y:90}, E0 = {x:580,y:330}, F0 = {x:390,y:330};
+
+  const gLeft = el('g');
+  const gRight = el('g');
+  svg.appendChild(gLeft);
+  svg.appendChild(gRight);
+
+  function renderInitial(){
+    gLeft.innerHTML = ''; gRight.innerHTML = '';
+    gLeft.appendChild(lineEl(A,B)); gLeft.appendChild(lineEl(B,C)); gLeft.appendChild(lineEl(C,A));
+    gLeft.appendChild(el('path',{d:rightAngleMark(C, angleOf(C.x,C.y,A.x,A.y), angleOf(C.x,C.y,B.x,B.y),14), stroke:'var(--ink)','stroke-width':2, fill:'none'}));
+    gLeft.appendChild(tickMarks(A,C,1,'var(--blue)'));
+    gLeft.appendChild(tickMarks(A,B,2,'var(--orange)'));
+    gLeft.appendChild(labelDot(A,'A',{dy:-12}));
+    gLeft.appendChild(labelDot(B,'B',{dx:-14,dy:8}));
+    gLeft.appendChild(labelDot(C,'C',{dx:-14,dy:8}));
+
+    gRight.appendChild(lineEl(D0,E0)); gRight.appendChild(lineEl(E0,F0)); gRight.appendChild(lineEl(F0,D0));
+    gRight.appendChild(el('path',{d:rightAngleMark(F0, angleOf(F0.x,F0.y,D0.x,D0.y), angleOf(F0.x,F0.y,E0.x,E0.y),14), stroke:'var(--ink)','stroke-width':2, fill:'none'}));
+    gRight.appendChild(tickMarks(D0,F0,1,'var(--blue)'));
+    gRight.appendChild(tickMarks(D0,E0,2,'var(--orange)'));
+    gRight.appendChild(labelDot(D0,'D',{dy:-12}));
+    gRight.appendChild(labelDot(E0,'E',{dx:14,dy:8}));
+    gRight.appendChild(labelDot(F0,'F',{dx:14,dy:8}));
   }
-}
 
-let breathingTimer = null;
-let breathingPhase = 0; // 0: inhale, 1: hold, 2: exhale, 3: hold2
-let isBreathingActive = false;
-let currentBreathingMode = '478'; // '478' or 'box'
-let breathSecondsLeft = 0;
+  function step1(){
+    removeProofLinesFrom(1);
+    renderInitial();
+    setInstruction(1, '오른쪽 삼각형을 드래그하여 <strong>$\\overline{AC}$ 변에 딱 맞닿게 붙여보세요</strong>', '길이가 같은 두 변 $\\overline{AC}$와 $\\overline{DF}$가 포개어지도록 이동시킵니다.', '점 $F$의 파란 원을 잡고 점 $C$ 위로 가져가면 착 달라붙습니다.');
 
-function setBreathingTechnique(mode) {
-  currentBreathingMode = mode;
-  document.getElementById('mode-478').className = mode === '478' ? 
-    'px-4 py-2 rounded-xl bg-accentSage/20 text-accentSage border border-accentSage/40 font-bold' : 
-    'px-4 py-2 rounded-xl bg-white/5 text-subText border border-white/10 hover:bg-white/10';
-  document.getElementById('mode-box').className = mode === 'box' ? 
-    'px-4 py-2 rounded-xl bg-accentSage/20 text-accentSage border border-accentSage/40 font-bold' : 
-    'px-4 py-2 rounded-xl bg-white/5 text-subText border border-white/10 hover:bg-white/10';
-  resetBreathingSession();
-}
+    const dragHandle = el('circle',{cx:F0.x,cy:F0.y,r:11,fill:'var(--teal)',opacity:0.85,class:'grabbable'});
+    gRight.appendChild(dragHandle);
 
-function toggleBreathingSession() {
-  if (isBreathingActive) {
-    pauseBreathingSession();
-  } else {
-    startBreathingSession();
+    let dragging = false, offsetX = 0, offsetY = 0, curTransform = {x:0,y:0};
+
+    dragHandle.addEventListener('pointerdown', (e)=>{
+      dragging = true;
+      dragHandle.setPointerCapture(e.pointerId);
+      const p = svgPoint(svg, e);
+      offsetX = p.x - (F0.x + curTransform.x);
+      offsetY = p.y - (F0.y + curTransform.y);
+    });
+    dragHandle.addEventListener('pointermove', (e)=>{
+      if (!dragging) return;
+      const p = svgPoint(svg, e);
+      curTransform.x = p.x - offsetX - F0.x;
+      curTransform.y = p.y - offsetY - F0.y;
+      gRight.setAttribute('transform', `translate(${curTransform.x},${curTransform.y})`);
+    });
+    dragHandle.addEventListener('pointerup', ()=>{
+      dragging = false;
+      const curF = { x: F0.x + curTransform.x, y: F0.y + curTransform.y };
+      if (dist(curF, C) < 50){
+        dragHandle.remove();
+        addProofLine(1, '$\\overline{AC}=\\overline{DF}$ 맞닿음 $\\rightarrow B, C, E$ 일직선', '두 직각($90^\\circ+90^\\circ=180^\\circ$)이 합쳐져 밑변이 평각(일직선)이 됩니다');
+        markStepDone();
+        step2();
+      } else {
+        gRight.setAttribute('transform', 'translate(0,0)');
+        curTransform = {x:0,y:0};
+        shakeEl(gRight);
+      }
+    });
   }
+
+  function step2(){
+    removeProofLinesFrom(2);
+    const E_final = { x: C.x + (C.x - B.x), y: C.y };
+    gLeft.innerHTML = ''; gRight.innerHTML = '';
+    gRight.removeAttribute('transform');
+
+    // 왼쪽 삼각형
+    gLeft.appendChild(lineEl(A,B)); gLeft.appendChild(lineEl(B,C)); gLeft.appendChild(lineEl(C,A));
+    gLeft.appendChild(el('path',{d:rightAngleMark(C, angleOf(C.x,C.y,A.x,A.y), angleOf(C.x,C.y,B.x,B.y),14), stroke:'var(--ink)','stroke-width':2, fill:'none'}));
+    gLeft.appendChild(tickMarks(A,B,2,'var(--orange)'));
+    gLeft.appendChild(labelDot(A,'A(D)',{dy:-14}));
+    gLeft.appendChild(labelDot(B,'B',{dx:-14,dy:8}));
+    gLeft.appendChild(labelDot(C,'C(F)',{dx:0,dy:20}));
+
+    // 오른쪽 삼각형
+    gRight.appendChild(lineEl(A,E_final)); gRight.appendChild(lineEl(E_final,C));
+    gRight.appendChild(el('path',{d:rightAngleMark(C, angleOf(C.x,C.y,E_final.x,E_final.y), angleOf(C.x,C.y,A.x,A.y),14), stroke:'var(--ink)','stroke-width':2, fill:'none'}));
+    gRight.appendChild(tickMarks(A,E_final,2,'var(--orange)'));
+    gRight.appendChild(labelDot(E_final,'E',{dx:16,dy:8}));
+    
+    // 공통 변
+    const midLine = lineEl(A,C,{stroke:'var(--blue)','stroke-width':3});
+    svg.appendChild(midLine);
+
+    setInstruction(2, '$\\triangle ABE$는 이등변삼각형입니다. 그림에서 <strong>$\\angle B$와 크기가 같은 각</strong>을 눌러보세요', '두 빗변($\\overline{AB}=\\overline{AE}$)의 길이가 같으므로 두 밑각의 크기가 같습니다.', '오른쪽 밑각인 점 $E$를 콕 눌러보세요.');
+
+    const targetE = el('circle',{cx:E_final.x, cy:E_final.y, r:22, fill:'transparent', class:'clickable-target focus-ring'});
+    svg.appendChild(targetE);
+
+    targetE.addEventListener('pointerdown', ()=>{
+      targetE.remove();
+      svg.appendChild(el('path',{d:arcPath(B.x,B.y,26, angleOf(B.x,B.y,C.x,C.y), angleOf(B.x,B.y,A.x,A.y)), stroke:'var(--amber)','stroke-width':2.5, fill:'none', class:'pulse-glow'}));
+      svg.appendChild(el('path',{d:arcPath(E_final.x,E_final.y,26, angleOf(E_final.x,E_final.y,A.x,A.y), angleOf(E_final.x,E_final.y,C.x,C.y)), stroke:'var(--amber)','stroke-width':2.5, fill:'none', class:'pulse-glow'}));
+      addProofLine(2, '$\\angle B = \\angle E$', '이등변삼각형의 두 밑각의 크기는 같습니다');
+      markStepDone();
+      step3(E_final);
+    });
+  }
+
+  function step3(E_final){
+    removeProofLinesFrom(3);
+    setInstruction(3, '직각삼각형의 성질에 의해 <strong>$\\angle BAC$와 크기가 같은 위쪽 각</strong>을 눌러보세요', '두 삼각형 모두 $90^\\circ - (밑각)$ 이므로 꼭지각의 크기도 서로 같습니다.', '위쪽 꼭짓점 $A(D)$ 주변의 오른쪽 각 영역을 눌러보세요.');
+
+    const targetA = el('circle',{cx:A.x + 15, cy:A.y + 20, r:20, fill:'transparent', class:'clickable-target focus-ring'});
+    svg.appendChild(targetA);
+
+    targetA.addEventListener('pointerdown', ()=>{
+      targetA.remove();
+      svg.appendChild(el('path',{d:arcPath(A.x,A.y,26, angleOf(A.x,A.y,B.x,B.y), angleOf(A.x,A.y,C.x,C.y)), stroke:'var(--violet)','stroke-width':2.5, fill:'none', class:'pulse-glow'}));
+      svg.appendChild(el('path',{d:arcPath(A.x,A.y,26, angleOf(A.x,A.y,C.x,C.y), angleOf(A.x,A.y,E_final.x,E_final.y)), stroke:'var(--violet)','stroke-width':2.5, fill:'none', class:'pulse-glow'}));
+      addProofLine(3, '$\\angle BAC = \\angle EDF$ (나머지 각)', '두 직각삼각형의 모든 세 각의 크기가 서로 같습니다');
+      markStepDone();
+      step4();
+    });
+  }
+
+  function step4(){
+    removeProofLinesFrom(4);
+    setInstruction(4, '이제 두 삼각형의 합동을 설명할 수 있습니다. <strong>합동 조건(SAS 또는 ASA)</strong>을 선택해보세요', '발견한 조건들을 활용해 SAS나 ASA 중 하나를 선택하면 대응 요소를 하이라이트해 드립니다.', 'SAS와 ASA 모두 정답입니다.');
+
+    buildQuiz(proofPanel, '$\\triangle ABC \\equiv \\triangle DEF$ 정당화 조건 선택:', ['SAS','ASA','SSS'], (opt) => opt === 'SAS' || opt === 'ASA', (selected)=>{
+      if (selected === 'SAS'){
+        addProofLine(4, '$\\triangle ABC \\equiv \\triangle DEF$ (SAS 합동)', '두 변의 길이와 그 끼인각($90^\\circ$)이 각각 같습니다');
+      } else {
+        addProofLine(4, '$\\triangle ABC \\equiv \\triangle DEF$ (ASA 합동)', '한 변의 길이와 그 양 끝각이 각각 같습니다');
+      }
+      showConclusion('$\\triangle ABC \\equiv \\triangle DEF$ (빗변과 한 변이 같은 RHS 합동 성립)');
+      markStepDone();
+    });
+  }
+
+  stepHistory = [step1, step2, () => step2(), () => step2()];
+  stepHistory[startStep - 1]();
 }
 
-function startBreathingSession() {
-  isBreathingActive = true;
-  document.getElementById('breath-start-btn').innerHTML = '<i class="fa-solid fa-pause mr-1"></i> 일시 정지';
-  breathingPhase = 0;
-  runBreathingStep();
-}
+function initTab4(startStep = 1){
+  clearCanvas(); clearProof();
+  const A = {x:270,y:90}, B = {x:70,y:330}, C = {x:270,y:330};
+  const D = {x:400,y:90}, E = {x:600,y:330}, F = {x:400,y:330};
 
-function pauseBreathingSession() {
-  isBreathingActive = false;
-  clearTimeout(breathingTimer);
-  document.getElementById('breath-start-btn').innerHTML = '<i class="fa-solid fa-play mr-1"></i> 호흡 재개';
-  document.getElementById('breath-action').innerText = '정지됨';
-}
+  function drawBase(){
+    const g = el('g');
+    g.appendChild(lineEl(A,B)); g.appendChild(lineEl(B,C)); g.appendChild(lineEl(C,A));
+    g.appendChild(el('path',{d:rightAngleMark(C, angleOf(C.x,C.y,A.x,A.y), angleOf(C.x,C.y,B.x,B.y),14), stroke:'var(--ink)','stroke-width':2, fill:'none'}));
+    g.appendChild(tickMarks(A,B,2,'var(--orange)'));
+    g.appendChild(labelDot(A,'A',{dy:-12})); g.appendChild(labelDot(B,'B',{dx:-14,dy:8})); g.appendChild(labelDot(C,'C',{dx:-14,dy:8}));
 
-function resetBreathingSession() {
-  pauseBreathingSession();
-  document.getElementById('breath-start-btn').innerHTML = '<i class="fa-solid fa-play mr-1"></i> 호흡 시작';
-  document.getElementById('breath-action').innerText = '준비';
-  document.getElementById('breath-timer').innerText = '4';
-  document.getElementById('breath-orb').style.transform = 'scale(1)';
-  document.getElementById('breath-subtext').innerText = '아래 버튼을 눌러 편안하게 호흡을 시작해보세요.';
-}
+    g.appendChild(lineEl(D,E)); g.appendChild(lineEl(E,F)); g.appendChild(lineEl(F,D));
+    g.appendChild(el('path',{d:rightAngleMark(F, angleOf(F.x,F.y,D.x,D.y), angleOf(F.x,F.y,E.x,E.y),14), stroke:'var(--ink)','stroke-width':2, fill:'none'}));
+    g.appendChild(tickMarks(D,E,2,'var(--orange)'));
+    g.appendChild(labelDot(D,'D',{dy:-12})); g.appendChild(labelDot(E,'E',{dx:14,dy:8})); g.appendChild(labelDot(F,'F',{dx:14,dy:8}));
+    return g;
+  }
+  svg.appendChild(drawBase());
 
-function runBreathingStep() {
-  if (!isBreathingActive) return;
+  const arcB = el('path',{stroke:'var(--blue)','stroke-width':2.5, fill:'none'});
+  const arcE = el('path',{stroke:'var(--blue)','stroke-width':2.5, fill:'none'});
+  const arcA = el('path',{stroke:'var(--amber)','stroke-width':2.5, fill:'none', opacity:0});
+  const arcD = el('path',{stroke:'var(--amber)','stroke-width':2.5, fill:'none', opacity:0});
+  svg.appendChild(arcB); svg.appendChild(arcE); svg.appendChild(arcA); svg.appendChild(arcD);
 
-  const orb = document.getElementById('breath-orb');
-  const actionText = document.getElementById('breath-action');
-  const timerText = document.getElementById('breath-timer');
-  const subtext = document.getElementById('breath-subtext');
+  function step1(){
+    removeProofLinesFrom(1);
+    setInstruction(1, '슬라이더로 $\\angle B$와 $\\angle E$를 <strong>서로 같게($45^\\circ$)</strong> 맞춰보세요', '한 예각이 같아지면 나머지 한 각($90^\\circ - \\text{각}$)도 자동으로 같아집니다.', '두 슬라이더의 각도를 동일하게 맞추고 [각도 일치 확인] 버튼을 누르세요.');
 
-  let duration = 4;
+    const fo = el('foreignObject',{x:50,y:385,width:540,height:75});
+    fo.innerHTML = `
+      <div style="display:flex; gap:16px; background:white; padding:8px 12px; border-radius:10px; border:1px solid var(--paper-edge); font-family:'JetBrains Mono',monospace; font-size:12px;">
+        <div style="flex:1">
+          <label>$\\angle B$: <span id="bVal">35</span>° → $\\angle A = $ <span id="aVal">55</span>°</label>
+          <input type="range" min="25" max="65" value="35" id="bSlider" style="width:100%" class="focus-ring">
+        </div>
+        <div style="flex:1">
+          <label>$\\angle E$: <span id="eVal">50</span>° → $\\angle D = $ <span id="dVal">40</span>°</label>
+          <input type="range" min="25" max="65" value="50" id="eSlider" style="width:100%" class="focus-ring">
+        </div>
+        <div style="display:flex; align-items:center;">
+          <button id="matchBtn" class="quiz-btn focus-ring" style="padding:6px 12px; white-space:nowrap;">일치 확인</button>
+        </div>
+      </div>`;
+    svg.appendChild(fo);
 
-  if (currentBreathingMode === '478') {
-    // 4-7-8 Cycle
-    if (breathingPhase === 0) { // Inhale 4s
-      actionText.innerText = '숨 들이쉬기';
-      subtext.innerText = '코로 천천히 깊게 숨을 마십니다...';
-      orb.style.transform = 'scale(1.35)';
-      duration = 4;
-      playAmbientTone(261.63, 4); // C4 Tone
-    } else if (breathingPhase === 1) { // Hold 7s
-      actionText.innerText = '숨 멈추기';
-      subtext.innerText = '폐에 가득 찬 공기를 느끼며 머물러보세요.';
-      orb.style.transform = 'scale(1.35)';
-      duration = 7;
-    } else if (breathingPhase === 2) { // Exhale 8s
-      actionText.innerText = '숨 내쉬기';
-      subtext.innerText = '입으로 후- 하고 길게 모든 긴장을 내뱉습니다.';
-      orb.style.transform = 'scale(1.0)';
-      duration = 8;
-      playAmbientTone(196.00, 8); // G3 Tone
+    const bSlider = fo.querySelector('#bSlider'), eSlider = fo.querySelector('#eSlider');
+    const bVal = fo.querySelector('#bVal'), aVal = fo.querySelector('#aVal');
+    const eVal = fo.querySelector('#eVal'), dVal = fo.querySelector('#dVal');
+
+    function update(){
+      const bDeg = +bSlider.value, eDeg = +eSlider.value;
+      bVal.textContent = bDeg; aVal.textContent = 90 - bDeg;
+      eVal.textContent = eDeg; dVal.textContent = 90 - eDeg;
+
+      arcB.setAttribute('d', arcPath(B.x,B.y,24, 0, -bDeg));
+      arcE.setAttribute('d', arcPath(E.x,E.y,24, 180 + eDeg, 180));
+      renderMath(fo);
     }
-  } else {
-    // Box Breathing 4-4-4-4
-    if (breathingPhase === 0) {
-      actionText.innerText = '숨 들이쉬기';
-      subtext.innerText = '4초 동안 부드럽게 숨을 마십니다.';
-      orb.style.transform = 'scale(1.3)';
-      duration = 4;
-      playAmbientTone(261.63, 4);
-    } else if (breathingPhase === 1) {
-      actionText.innerText = '숨 멈추기';
-      subtext.innerText = '4초 동안 편안히 멈춥니다.';
-      orb.style.transform = 'scale(1.3)';
-      duration = 4;
-    } else if (breathingPhase === 2) {
-      actionText.innerText = '숨 내쉬기';
-      subtext.innerText = '4초 동안 천천히 숨을 뱉습니다.';
-      orb.style.transform = 'scale(1.0)';
-      duration = 4;
-      playAmbientTone(196.00, 4);
-    } else if (breathingPhase === 3) {
-      actionText.innerText = '비우고 멈추기';
-      subtext.innerText = '비워진 마음을 느끼며 4초간 머뭅니다.';
-      orb.style.transform = 'scale(1.0)';
-      duration = 4;
-    }
+    bSlider.addEventListener('input', update);
+    eSlider.addEventListener('input', update);
+    update();
+
+    fo.querySelector('#matchBtn').addEventListener('click', ()=>{
+      if (bSlider.value === eSlider.value){
+        arcA.setAttribute('d', arcPath(A.x,A.y,22, angleOf(A.x,A.y,B.x,B.y), angleOf(A.x,A.y,C.x,C.y)));
+        arcD.setAttribute('d', arcPath(D.x,D.y,22, angleOf(D.x,D.y,E.x,E.y), angleOf(D.x,D.y,F.x,F.y)));
+        arcA.setAttribute('opacity',1); arcD.setAttribute('opacity',1);
+        arcA.classList.add('pulse-glow'); arcD.classList.add('pulse-glow');
+        fo.remove();
+        addProofLine(1, '$\\angle B = \\angle E \\implies \\angle A = \\angle D$', '두 직각삼각형에서 빗변의 양 끝각이 각각 같습니다');
+        markStepDone();
+        step2();
+      } else {
+        shakeEl(fo);
+      }
+    });
   }
 
-  breathSecondsLeft = duration;
-  timerText.innerText = breathSecondsLeft;
+  function step2(){
+    removeProofLinesFrom(2);
+    setInstruction(2, '빗변의 길이와 그 양 끝각이 같으므로 <strong>기존 삼각형의 어떤 합동 조건</strong>에 해당할까요?', '빗변 $\\overline{AB}=\\overline{DE}$와 양 끝 두 각이 각각 같습니다.', '한 변(Side)과 양 끝 두 각(Angle)이 같으므로 ASA 합동입니다.');
 
-  const countdownInterval = setInterval(() => {
-    if (!isBreathingActive) {
-      clearInterval(countdownInterval);
-      return;
-    }
-    breathSecondsLeft--;
-    if (breathSecondsLeft > 0) {
-      timerText.innerText = breathSecondsLeft;
-    } else {
-      clearInterval(countdownInterval);
-      // Advance Phase
-      const maxPhases = currentBreathingMode === '478' ? 3 : 4;
-      breathingPhase = (breathingPhase + 1) % maxPhases;
-      runBreathingStep();
-    }
-  }, 1000);
-}
-
-// Web Audio Soft Chime Synth
-function playAmbientTone(freq, duration) {
-  try {
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-
-    gain.gain.setValueAtTime(0, audioCtx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.08, audioCtx.currentTime + 0.5);
-    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-
-    osc.start();
-    osc.stop(audioCtx.currentTime + duration);
-  } catch (e) {
-    // Ignore audio context autoplay restrictions
+    buildQuiz(proofPanel, '$\\triangle ABC \\equiv \\triangle DEF$ 합동 조건은?', ['SAS','ASA','SSS','RHA'], 1, ()=>{
+      addProofLine(2, '$\\triangle ABC \\equiv \\triangle DEF$ (ASA 합동)', '빗변의 길이와 양 끝 각의 크기가 각각 같습니다');
+      showConclusion('$\\triangle ABC \\equiv \\triangle DEF$ (빗변과 한 예각이 같은 RHA 합동 성립)');
+      markStepDone();
+    });
   }
+
+  stepHistory = [step1, step2];
+  stepHistory[startStep - 1]();
 }
 
-let selectedMoodName = '평온';
-let selectedMoodEmoji = '😊';
+const TABS = [
+  { id:1, label:'이등변삼각형의 성질', icon:'triangle', init: initTab1 },
+  { id:2, label:'이등변삼각형이 되는 조건', icon:'move-diagonal', init: initTab2 },
+  { id:3, label:'직각삼각형 · RHS', icon:'flip-horizontal-2', init: initTab3 },
+  { id:4, label:'직각삼각형 · RHA', icon:'calculator', init: initTab4 },
+];
 
-function selectMood(name, emoji) {
-  selectedMoodName = name;
-  selectedMoodEmoji = emoji;
-  const buttons = document.querySelectorAll('.mood-btn');
-  buttons.forEach(btn => {
-    if (btn.innerText.includes(name)) {
-      btn.classList.add('border-accentSage', 'bg-accentSage/20');
-      btn.classList.remove('border-white/5', 'bg-white/5');
-    } else {
-      btn.classList.remove('border-accentSage', 'bg-accentSage/20');
-      btn.classList.add('border-white/5', 'bg-white/5');
-    }
+const tabNav = document.getElementById('tabNav');
+function renderTabNav(){
+  tabNav.innerHTML = '';
+  TABS.forEach(t => {
+    const b = document.createElement('button');
+    b.className = 'tab-btn focus-ring' + (t.id === currentTab ? ' active' : '');
+    b.innerHTML = `<i data-lucide="${t.icon}" class="w-4 h-4"></i><span>${t.label}</span>`;
+    b.addEventListener('click', () => switchTab(t.id));
+    tabNav.appendChild(b);
   });
+  lucide.createIcons();
 }
 
-function updateIntensityDisplay(val) {
-  document.getElementById('intensity-val').innerText = `${val} / 10`;
+function switchTab(id){
+  currentTab = id;
+  currentStep = 1;
+  renderTabNav();
+  TABS.find(t => t.id === id).init(1);
+  lucide.createIcons();
 }
 
-function saveJournalEntry() {
-  const text = document.getElementById('journal-text').value.trim();
-  const intensity = document.getElementById('intensity-slider').value;
-
-  if (!text) return;
-
-  const newEntry = {
-    id: Date.now(),
-    date: new Date().toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-    mood: selectedMoodName,
-    emoji: selectedMoodEmoji,
-    intensity: intensity,
-    text: text
-  };
-
-  const existing = JSON.parse(localStorage.getItem('maeum_journal') || '[]');
-  existing.unshift(newEntry);
-  localStorage.setItem('maeum_journal', JSON.stringify(existing));
-
-  document.getElementById('journal-text').value = '';
-  loadJournalEntries();
-}
-
-function loadJournalEntries() {
-  const historyContainer = document.getElementById('journal-history');
-  const entries = JSON.parse(localStorage.getItem('maeum_journal') || '[]');
-
-  if (entries.length === 0) {
-    historyContainer.innerHTML = `<p class="text-xs text-subText text-center py-4 border border-dashed border-white/10 rounded-xl">아직 남겨진 감정 일기가 없습니다.</p>`;
-    return;
+// 이전 단계 버튼 동작
+prevStepBtn.addEventListener('click', ()=>{
+  if (currentStep > 1){
+    currentStep--;
+    TABS.find(t => t.id === currentTab).init(currentStep);
+    lucide.createIcons();
   }
+});
 
-  historyContainer.innerHTML = entries.map(e => `
-    <div class="bg-panelBg p-3.5 rounded-xl border border-white/10 space-y-1.5">
-      <div class="flex justify-between items-center text-xs">
-        <span class="font-bold text-warmText flex items-center gap-1.5">
-          <span>${e.emoji}</span> ${e.mood}
-          <span class="text-[10px] text-accentSage font-normal">강도 ${e.intensity}/10</span>
-        </span>
-        <span class="text-[10px] text-subText">${e.date}</span>
-      </div>
-      <p class="text-xs text-warmText/90 leading-relaxed">${escapeHtml(e.text)}</p>
-    </div>
-  `).join('');
-}
+// 처음부터 다시 버튼 동작
+document.getElementById('resetBtn').addEventListener('click', () => {
+  currentStep = 1;
+  TABS.find(t => t.id === currentTab).init(1);
+  lucide.createIcons();
+});
 
-function clearJournalEntries() {
-  localStorage.removeItem('maeum_journal');
-  loadJournalEntries();
-}
-
-const GROUNDING_STEPS = [
-  { step: 1, title: '1단계: 눈에 보이는 것 5가지', desc: '지금 눈앞 주변을 천천히 둘러보세요. 평소 무심히 지나쳤던 소품, 창밖의 풍경 등 5가지를 속으로 찾아보세요.', icon: 'fa-eye' },
-  { step: 2, title: '2단계: 신체에 느껴지는 감각 4가지', desc: '발바닥이 닿은 바닥, 옷감의 촉감, 의자의 쿠션감 등 지금 몸으로 느껴지는 실재 감각 4가지에 집중합니다.', icon: 'fa-hand' },
-  { step: 3, title: '3단계: 귀로 들리는 소리 3가지', desc: '시계 초침 소리, 멀리서 들리는 바람 소리, 나직한 숨소리 등 조용히 귀를 기울여 3가지 소리를 들어보세요.', icon: 'fa-ear-listen' },
-  { step: 4, title: '4단계: 주변의 냄새 2가지', desc: '공기의 냄새, 방 안의 방향제 향, 옷에서 나는 익숙한 향 등 2가지 냄새를 가볍게 마셔봅니다.', icon: 'fa-wind' },
-  { step: 5, title: '5단계: 입안의 맛 1가지', desc: '입안에 감도는 따뜻한 차의 잔향이나 입안의 부드러운 감각 1가지에 마음을 모아봅니다.', icon: 'fa-mug-hot' }
-];
-
-let currentGroundingIndex = 0;
-
-function updateGroundingUI() {
-  const step = GROUNDING_STEPS[currentGroundingIndex];
-  document.getElementById('grounding-icon').className = `fa-solid ${step.icon}`;
-  document.getElementById('grounding-step-title').innerText = step.title;
-  document.getElementById('grounding-step-desc').innerText = step.desc;
-  document.getElementById('grounding-progress').innerText = `${step.step} / 5`;
-
-  document.getElementById('grounding-prev-btn').disabled = currentGroundingIndex === 0;
-  document.getElementById('grounding-next-btn').innerText = currentGroundingIndex === 4 ? '완료하기' : '다음단계';
-}
-
-function nextGroundingStep() {
-  if (currentGroundingIndex < 4) {
-    currentGroundingIndex++;
-    updateGroundingUI();
-  } else {
-    currentGroundingIndex = 0;
-    updateGroundingUI();
-    switchTab('chat');
-  }
-}
-
-function prevGroundingStep() {
-  if (currentGroundingIndex > 0) {
-    currentGroundingIndex--;
-    updateGroundingUI();
-  }
-}
-
-const AFFIRMATIONS = [
-  "지금의 힘듦은 나의 전체가 아니라, 지나가는 하나의 감정일 뿐입니다.",
-  "나는 나 자신에게 조금 더 너그러워질 자격이 충분합니다.",
-  "서두르지 않아도 괜찮습니다. 한 걸음씩천천히 걸어가면 됩니다.",
-  "지금 이 순간에도 나는 충분히 잘 해내고 있습니다.",
-  "모든 것을 혼자 완벽히 짊어지지 않아도 괜찮습니다."
-];
-
-function generateNewAffirmation() {
-  const rand = AFFIRMATIONS[Math.floor(Math.random() * AFFIRMATIONS.length)];
-  document.getElementById('affirmation-text').innerText = `"${rand}"`;
-}
-
-function saveSafetyPlan() {
-  const text = document.getElementById('safety-action').value.trim();
-  if (!text) return;
-  localStorage.setItem('maeum_safety_plan', text);
-  loadSafetyPlan();
-}
-
-function loadSafetyPlan() {
-  const text = localStorage.getItem('maeum_safety_plan');
-  const display = document.getElementById('safety-plan-display');
-  if (text) {
-    display.innerText = `Saved Safety Plan: "${text}"`;
-    display.classList.remove('hidden');
-  }
-}
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-}
-
-function escapeJsString(str) {
-  if (!str) return '';
-  return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, ' ');
-}
+// 초기화 실행
+window.addEventListener('DOMContentLoaded', ()=>{
+  renderTabNav();
+  switchTab(1);
+});
 </script>
 </body>
 </html>
